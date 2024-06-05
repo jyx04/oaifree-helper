@@ -285,9 +285,9 @@ async function getInitialHTML() {
 
 function getInitialFieldsHTML() {
   const fields = [
-    { name: 'Admin', label: '管理员 (用于管理面板的验证使用，且可看所有聊天记录)' },
-    { name: 'TurnstileKeys', label: 'Turnstile密钥' },
-    { name: 'TurnstileSiteKey', label: '站点密钥' },
+    { name: 'Admin', label: '管理员 (用于管理面板的验证使用，且可看所有聊天记录)【必填】' },
+    { name: 'TurnstileKeys', label: 'Turnstile密钥【必填】' },
+    { name: 'TurnstileSiteKey', label: '站点密钥【必填】' },
     { name: 'Users', label: '默认用户 (以aaa,bbb,ccc形式填写)' },
     { name: 'VIPUsers', label: 'VIP用户 (即私车用户，无速率和时间限制)' },
     { name: 'FreeUsers', label: '限制用户 (有速率和时间限制)' },
