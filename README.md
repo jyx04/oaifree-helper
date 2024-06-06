@@ -1,4 +1,4 @@
-# oaifree_helper
+# oaifree-helper
 ### 本项目基于始皇的new站服务。利用单个Worker&Pages优雅访问始皇镜像站，组建合租共享车队。包含直链登陆、前端登陆页、用户管理、token池管理、车队管理、用户注册、用量查询等等功能。全程无需服务器和域名，无需改代码。
 ## 首先，致敬始皇，致敬所有热佬，没有他们的项目和服务就没有这个项目。
 ### [体验站](https://oaifreehelper.haibara-ai.workers.dev) 密码linux.do,无有效功能
