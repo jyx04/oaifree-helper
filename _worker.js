@@ -272,7 +272,7 @@ async function getInitialHTML() {
   </head>
   <body>
     <div class="container">
-      <h1>Variable Shortcut Entry</h1>
+      <h1>配置向导</h1>
       <form id="variableEntryForm" action="/" method="POST">
         ${getInitialFieldsHTML()}
         <button type="submit">Submit</button>
