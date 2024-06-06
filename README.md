@@ -1,10 +1,10 @@
 # oaifree_helper
 ### 本项目基于始皇的new站服务。利用单个Worker&Pages优雅访问始皇镜像站，组建合租共享车队。包含直链登陆、前端登陆页、用户管理、token池管理、车队管理、用户注册、用量查询等等功能。全程无需服务器和域名，无需改代码。
 ## 首先，致敬始皇，致敬所有热佬，没有他们的项目和服务就没有这个项目。
-### 体验站： https://all.haibara-ai.workers.dev/ 无有效功能
+### 体验站： https://all.haibara-ai.workers.dev/ 密码linux.do,无有效功能
 ### 主要功能
-   - 原理是储存`refreshtoken`和`accesstoken`，并调用始皇的各项接口获取`sharetoken`一键直达始皇的`new.oaifree.com`镜像站
-   - 用户使用唯一用户名登陆即可后台自动分配sharetoken，自带始皇的聊天隔离功能。包含简易的用户体系，储存各类用户，设置各类用户的限额和限制
+   - 原理是储存`refreshtoken`和`accesstoken`，并调用始皇的各项接口获取`sharetoken`一键直达始皇的new.oaifree.com镜像站
+   - 用户使用唯一用户名登陆即可后台自动分配·sharetoken·，自带始皇的聊天隔离功能。包含简易的用户体系，储存各类用户，设置各类用户的限额和限制
    - 支持使用/?un=xxx的直链登陆，分享更省心。
    - 自带注册功能，分享激活码给朋友，不用总手动录入用户
    - 支持组建token池，可前端面板储存token，支持自动判断rt/at，自动解析json
@@ -13,15 +13,18 @@
    - 支持禁用失效车次
    - 自动检测官方服务状态，如遇官方故障自动禁止用户登陆，甩锅官方
    - 支持人机验证
-   - 自带管理面板,包含`用户管理、token池管理、用量查询`，点击登录页Logo跳转
-# Worker 部署
-### 1. 配置Turnstile 站点
+   - 自带管理面板,包含用户管理、token池管理、用量查询，点击登录页Logo跳转
+# Worker 部署（一键直达）
+   [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jyx04/oaifree_helper)
+   - 配置完成后，请完成下方1. Turnstile人机验证服务，获得`站点密钥`和`密钥`
+   - 访问部署域名，按要求填写各项变量，完成部署！
+# Worker 部署（手动版）
+### 1. 配置Turnstile人机验证服务
    - 注册/登陆你的cloudflare，右上角可设置语言为中文。
    - 左侧找到`Turnstile`，选择`添加站点`
    - `站点名称`随意，`域`为：`workers.dev`或你自己的域名
    - 创建，记录好`站点密钥`和`密钥`，备用
 ### 2. 部署 Cloudflare Worker：
-   - 注册/登陆你的cloudflare，右上角可设置语言为中文。
    - 在左侧列表找到`Worker和Pages`
    - 选择`KV`，创建一个名为`oai_global_variables`的KV备用
    - 选择`概述`-`创建应用程序`-`Worker`，为项目命名，随便想一个简单的名字，如`new`, `oaifree`之类的。并创建worker
