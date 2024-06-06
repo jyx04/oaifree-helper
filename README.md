@@ -36,26 +36,30 @@
 ### 3. 环境变量
    - 以下是所有变量，全部无需手动填写，部署完项目后直接第一次进入可前端面板一键储存。
 ```
+Admin //管理员，用于管理面板的验证使用，且可看所有聊天记录【必填】
 TurnstileKeys //turnsile的密钥【必填】
 TurnstileSiteKey //站点密钥【必填】
-Users //默认用户，以aaa,bbb,ccc形式填写，能访问所有车牌
-VIPUsers //vip用户，即私车用户，无速率和时间限制
-FreeUsers //限制用户，有速率和时间限制
-Admin //管理员，用于管理面板的验证使用，且可看所有聊天记录【必填】
-ForceAN //自动上车，若设置为1，用户名为xxx_n的私车用户用登陆强制进入n号车，忽略登陆所选车号
-SetAN //无车牌模式下的默认车牌，如只有一辆车则填1。如多辆车则留空，不能填0。如果要开启随机或顺序轮询，填True，并用下面两个变量控制
-PlusMode //plus号随机的轮询方式，Order或者Random
-FreeMode //普号随机的轮询方式，Order/Random或Plus（使用plus号池和配置），如只有一辆车则填1。如多辆车则留空，不能填0
 WebName //站点名称
 WorkerURL //站点域名，无需https://若无自己的域名，贼为worker默认域名：[worker名].[用户名].workers.dev【必填】
 LogoURL //图片地址，需https://
+
+Users //默认用户，以aaa,bbb,ccc形式填写，能访问所有车牌
+VIPUsers //vip用户，即私车用户，无速率和时间限制
+FreeUsers //限制用户，有速率和时间限制
+
+ForceAN //强制选车，若设置为1，用户名为xxx_n的私车用户用登陆强制进入n号车，忽略登陆所选车号
+SetAN //选车模式。如只有一辆车则填1。如多辆车用户手动选则留空。如需开启随机或顺序轮询，填True，并用下面两个变量控制
+PlusMode //plus号随机的轮询方式，Order或者Random
+FreeMode //普号随机的轮询方式，Order/Random或Plus（使用plus号池和配置）
+
 CDKEY //注册可用的激活码，以aaa,bbb,ccc格式
 AutoDeleteCDK //设置为1则激活码只可用一次
 FKDomain //把sharetoken当at用时，走的默认域名
 Status //服务状态，若为非空，无视openai官方故障通告，始终允许登陆
+TemporaryAN //强制启用临时聊天的车牌，以1,2,3格式
+
 PlusAliveAccounts //plus号池存活序号，以1,2,3格式
 FreeAliveAccounts //普号存活序号，以1,2,3格式
-TemporaryAN //强制临时模式的车牌，其中的车次默认强制临时模式，以1,2,3格式
 rt_1
 rt_2
 at_1//（若已有rt，at可不填）
