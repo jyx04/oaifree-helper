@@ -27,7 +27,7 @@ env:
 
 jobs:
   deploy:
-    name: Deploy worker
+    name: Deploy workers
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -61,7 +61,7 @@ jobs:
             echo "CF_KV_NAMESPACE_ID=$existing_namespace_id" >> $GITHUB_ENV
           fi
 
-      - name: Generate wrangler.toml
+      - name: Generate wrangler.toml for main worker
         run: |
           echo "name = \"oaifreehelper\"" > wrangler.toml
           echo "workers_dev = true" >> wrangler.toml
@@ -71,14 +71,37 @@ jobs:
           echo "binding = \"oai_global_variables\"" >> wrangler.toml
           echo "id = \"$CF_KV_NAMESPACE_ID\"" >> wrangler.toml
 
-      - name: Debug Environment Variables
-        run: |
-          echo "CLOUDFLARE_ACCOUNT_ID=$CLOUDFLARE_ACCOUNT_ID"
-          echo "CLOUDFLARE_API_TOKEN=$CLOUDFLARE_API_TOKEN"
-          echo "CF_KV_NAMESPACE_ID=$CF_KV_NAMESPACE_ID"
-
-      - name: Publish to Cloudflare Workers
+      - name: Publish main worker to Cloudflare Workers
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CF_KV_NAMESPACE_ID: ${{ steps.create_or_find_kv.outputs.CF_KV_NAMESPACE_ID }}
+        run: wrangler deploy
+
+      - name: Generate wrangler.toml for api worker
+        run: |
+          echo "name = \"api\"" > wrangler.toml
+          echo "workers_dev = true" >> wrangler.toml
+          echo "main = \"api_worker.js\"" >> wrangler.toml
+          echo "compatibility_date = \"2024-06-01\"" >> wrangler.toml
+          echo "[[kv_namespaces]]" >> wrangler.toml
+          echo "binding = \"oai_global_variables\"" >> wrangler.toml
+          echo "id = \"$CF_KV_NAMESPACE_ID\"" >> wrangler.toml
+
+      - name: Publish api worker to Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: wrangler deploy
+
+      - name: Generate wrangler.toml for free worker
+        run: |
+          echo "name = \"free\"" > wrangler.toml
+          echo "workers_dev = true" >> wrangler.toml
+          echo "main = \"free_worker.js\"" >> wrangler.toml
+          echo "compatibility_date = \"2024-06-01\"" >> wrangler.toml
+          echo "[[kv_namespaces]]" >> wrangler.toml
+          echo "binding = \"oai_global_variables\"" >> wrangler.toml
+          echo "id = \"$CF_KV_NAMESPACE_ID\"" >> wrangler.toml
+
+      - name: Publish free worker to Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: wrangler deploy
