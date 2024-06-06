@@ -66,7 +66,7 @@ async function handleRequest(request) {
 
   
     
-  if (admin==''){
+  if (!admin){
       return handleInitialRequest(request);
   }
 
@@ -162,7 +162,7 @@ async function handleRequest(request) {
 //初始化信息填入功能
 async function handleInitialRequest(request) {
   const admin = await KV.get('Admin');
-if (admin==''){
+if (!admin){
   if (request.method === 'GET') {
     return handleInitialGetRequest();
   } else if (request.method === 'POST') {
