@@ -14,6 +14,8 @@
    - 自动检测官方服务状态，如遇官方故障自动禁止用户登陆，甩锅官方
    - 支持人机验证
    - 自带管理面板,包含用户管理、token池管理、用量查询，点击登录页Logo跳转
+   <img width="500" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/3675a0bf-efd4-4cf3-a42b-4e96fab83bb2">
+
 # Worker 部署（一键直达）
    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jyx04/oaifree_helper)
    - 配置完成后，请按照下方配置Turnstile人机验证服务教程，获得`站点密钥`和`密钥`
@@ -27,9 +29,9 @@
 ### 2. 部署 Cloudflare Worker：
    - 在左侧列表找到`Worker和Pages`
    - 选择`KV`，创建一个名为`oai_global_variables`的KV备用
-   - 选择`概述`-`创建应用程序`-`Worker`，为项目命名，随便想一个简单的名字，如`new`, `oaifree`之类的。并创建worker
+   - 选择`概述`-`创建应用程序`-`Worker`，为项目命名，并创建worker
    - 进入`worker`-`设置`-`变量`，在`KV 命名空间绑定`添加绑定KV，变量名`oai_global_variables`
-   - `可选`在worker的`设置`-`触发器`-`添加自定义域`绑定自己的域名
+   - 【可选】在worker的`设置`-`触发器`-`添加自定义域`绑定自己的域名
    - 回到本GitHub项目，复制`_worker.js`中的全部内容，在worker配置页面点击 `编辑代码`，清空原有内容粘贴后点右上角`部署`
    - 大功告成！
    - 访问`自定义的域名`，或点击`部署`-`查看版本`,在初始面板一键保存各项环境变量（`Admin`保存后后该页面自动禁用，若需更改请至KV中调整）
@@ -67,7 +69,7 @@ at_2
 ……
 ```
 ### 4. 选车面板（可选）
-<img width="1300" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/d44a5290-ae04-4be2-affb-26447e4b8050">
+<img width="500" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/d44a5290-ae04-4be2-affb-26447e4b8050">
 
    - 通过文件`free_worker.js`部署worker，即可配置基于普号号池的选车上车界面。（一件部署已包含）
    - 大部分变量同上，可以额外配置以下变量
