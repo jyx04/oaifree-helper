@@ -16,8 +16,8 @@
    - 自带管理面板,包含用户管理、token池管理、用量查询，点击登录页Logo跳转
 # Worker 部署（一键直达）
    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jyx04/oaifree_helper)
-   - 配置完成后，请完成下方1. Turnstile人机验证服务，获得`站点密钥`和`密钥`
-   - 访问部署域名，按要求填写各项变量，完成部署！
+   - 配置完成后，请按照下方配置Turnstile人机验证服务教程，获得`站点密钥`和`密钥`
+   - 访问部署域名，再初始界面填写各项变量，完成部署！
 # Worker 部署（手动版）
 ### 1. 配置Turnstile人机验证服务
    - 注册/登陆你的cloudflare，右上角可设置语言为中文。
@@ -62,5 +62,21 @@ at_1//（若已有rt，at可不填）
 at_2
 ……
 ```
+### 4. 选车面板（可选）
+<img width="1300" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/d44a5290-ae04-4be2-affb-26447e4b8050">
+
+   - 通过文件`free_worker.js`部署worker，即可配置基于普号号池的选车上车界面。（一件部署已包含）
+   - 大部分变量同上，可以额外配置以下变量
+     ```
+     FreeWebName //选车上车页的站点名
+     FreeWebIntro //选车上车页的简介，可用html代码插入文本、超链接等
+     ```
+### 5. API接口（可选）
+   - 通过文件`api_worker.js`部署worker，即可配置基于plus号池的api服务。（一件部署已包含）
+   - 本接口同样采用始皇的服务，使用plus号池内账号的token，随机调取，失效自动禁用
+   - api key为admin密码
+     
+
 # 日志
-- 建立GitHub项目
+ - 建立GitHub项目
+ - 创建一键部署，新增选车界面和api服务
