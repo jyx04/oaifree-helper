@@ -80,7 +80,7 @@ at_2
 ### 5. API接口（可选）
    - 通过文件`api_worker.js`部署worker，即可配置基于plus号池的api服务。（一件部署已包含）
    - 本接口同样采用始皇的服务，使用plus号池内账号的token，随机调取，失效自动禁用
-   - api key为admin密码
+   - api地址请参考始皇的服务文档，api key为admin密码
      
 
 # 日志
