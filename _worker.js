@@ -126,8 +126,8 @@ async function handleRequest(request) {
     }
   }
   if (url.pathname === '/auth/login') {
-    const token = url.searchParams.get('token');
-   /* if (!token) {
+   /* const token = url.searchParams.get('token');
+    if (!token) {
       if (request.method === 'GET') {
         return handleLoginGetRequest(request);
       } else if (request.method === 'POST') {
@@ -316,7 +316,7 @@ function getInitialFieldsHTML() {
 
 
 
-//Plus号管理功能
+//Token管理功能
 async function handlePlusPostRequest(request) {
   const formData = await request.formData();
   const adminuserName = formData.get('adminusername');
@@ -520,7 +520,7 @@ async function getPlusHTML() {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Plus Account Updater</title>
+  <title>Token  Management</title>
   <style>
     body {
       display: flex;
@@ -594,7 +594,6 @@ async function getPlusHTML() {
       text-align: left;
       color: #d00e17;
   }
-  
   .ulp-input-error-icon {
       margin-right: 4px;
   }
@@ -602,7 +601,7 @@ async function getPlusHTML() {
 </head>
 <body>
   <div class="login-container">
-    <h1>Update Plus Account</h1>
+    <h1>Token Management</h1>
     <form id="managePlus" action="/token" method="POST">
       <label for="adminusername">Admin Username:</label>
       <input type="password" id="adminsername" name="adminusername" required>
@@ -679,18 +678,13 @@ async function handleAdminPostRequest(request) {
       await KV.put('SetAN', chooseAccount);
     }
   }
-
-  // Handle force car
   if (forceCar) {
     const forceCarValue = forceCar.toLowerCase() === 'yes' ? '1' : '0';
     await KV.put('ForceAN', forceCarValue);
   }
-
-  // Handle temporary account
   if (temporaryAccount) {   
     await KV.put('TemporaryAN', temporaryAccount);
   }
-
   return generateAdminResponse('Operation completed successfully');
 }
 
@@ -721,144 +715,147 @@ async function getAdminHTML() {
   const turnstileSiteKey=await KV.get('TurnstileSiteKey');
   return `
   <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>System Manager</title>
-    <style>
-      body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        background-color: #f2f2f5;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        margin: 0;
-      }
-      .login-container {
-        background-color: #ffffff;
-        padding: 40px;
-        border-radius: 12px;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        max-width: 400px;
-        width: 100%;
-        text-align: center;
-      }
-      .login-container h1 {
-        margin-bottom: 24px;
-        font-size: 28px;
-        color: #333;
-        font-weight: 600;
-      }
-      .login-container label {
-        display: block;
-        font-size: 16px;
-        margin-bottom: 8px;
-        color: #555;
-        text-align: left;
-      }
-      .login-container input, .login-container select, .login-container button {
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: 16px;
-        box-sizing: border-box;
-        width: 100%;
-        margin-bottom: 20px;
-      }
-      .login-container select {
-        height: 48px;
-      }
-      .login-container button {
-        background-color: #007aff;
-        border: none;
-        color: white;
-        font-size: 18px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-      }
-      .login-container button:hover {
-        background-color: #005fcb;
-      }
-      .management-buttons {
-        display: flex;
-        justify-content: space-between;
-      }
-      .management-buttons a, .usage-link {
-        display: block;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: 16px;
-        box-sizing: border-box;
-        width: 48%;
-        background-color: #007aff;
-        color: white;
-        text-align: center;
-        text-decoration: none;
-        transition: background-color 0.3s;
-        margin-top: 10px;
-      }
-      .management-buttons a:hover, .usage-link:hover {
-        background-color: #005fcb;
-      }
-      .ulp-field.ulp-error .ulp-error-info {
-        margin-top: 4px;
-        margin-bottom: 4px;
-        display: flex;
-        font-size: 14px;
-        line-height: 1.4;
-        text-align: left;
-        color: #d00e17;
-      }
-      .ulp-input-error-icon {
-        margin-right: 4px;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="login-container">
-      <h1>System Manager</h1>
-      <form id="manageAccountForm" action="/admin" method="POST">
-        <input type="hidden" id="cf-turnstile-response" name="cf-turnstile-response" required>
-        <label for="adminusername">Admin Username:</label>
-        <input type="password" id="adminusername" name="adminusername" required>
-        <label for="choose_account">Choose Account:</label>
-        <input type="text" id="choose_account" name="choose_account" placeholder="True, No, or Number">
-        <label for="force_car">Force Car:</label>
-        <select id="force_car" name="force_car">
-          <option value="">Choose...</option>
-          <option value="yes">Yes</option>
-          <option value="no">No</option>
-        </select>
-        <label for="temporary_account">Temporary Account:</label>
-        <input type="text" id="temporary_account" name="temporary_account">
-        <button type="submit">Submit</button>
-      </form>
-      <a href="https://${WorkerURL}/usage" class="usage-link">Go to Usage</a>
-      <div class="management-buttons">
-        <a href="https://${WorkerURL}/token">Plus Management</a>
-        <a href="https://${WorkerURL}/user">User Management</a>
-      </div>
-      <div style="height: 20px;"></div>
-      <div class="cf-turnstile" data-sitekey="${turnstileSiteKey}" data-callback="onTurnstileCallback"></div>
-    </div>
-    <script>
-    function onTurnstileCallback(token) {
-      document.getElementById('cf-turnstile-response').value = token;
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>System Manager</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f2f2f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
     }
-  
-    document.getElementById('manageAccountForm').addEventListener('submit', function(event) {
-      if (!document.getElementById('cf-turnstile-response').value) {
-        alert('Please complete the verification.');
-        event.preventDefault();
-      }
-    });
-    </script>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  </body>
-  </html>
-  
+    .login-container {
+      background-color: #ffffff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    .login-container h1 {
+      margin-bottom: 24px;
+      font-size: 28px;
+      color: #333;
+      font-weight: 600;
+    }
+    .login-container label {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: #555;
+      text-align: left;
+    }
+    .login-container input, .login-container select, .login-container button {
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .login-container select {
+      height: 48px;
+    }
+    .login-container button {
+      background-color: #007aff;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .login-container button:hover {
+      background-color: #005fcb;
+    }
+    .management-buttons, .usage-return-buttons {
+      display: flex;
+      justify-content: space-between;
+    }
+    .management-buttons a, .usage-link, .return-button {
+      display: block;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+      width: 48%;
+      background-color: #007aff;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+    .management-buttons a:hover, .usage-link:hover, .return-button:hover {
+      background-color: #005fcb;
+    }
+    .ulp-field.ulp-error .ulp-error-info {
+      margin-top: 4px;
+      margin-bottom: 4px;
+      display: flex;
+      font-size: 14px;
+      line-height: 1.4;
+      text-align: left;
+      color: #d00e17;
+    }
+    .ulp-input-error-icon {
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>System Manager</h1>
+    <form id="manageAccountForm" action="/admin" method="POST">
+      <input type="hidden" id="cf-turnstile-response" name="cf-turnstile-response" required>
+      <label for="adminusername">Admin Username:</label>
+      <input type="password" id="adminusername" name="adminusername" required>
+      <label for="choose_account">Choose Account:</label>
+      <input type="text" id="choose_account" name="choose_account" placeholder="True, No, or Number">
+      <label for="force_car">Force Car:</label>
+      <select id="force_car" name="force_car">
+        <option value="">Choose...</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+      <label for="temporary_account">Temporary Account:</label>
+      <input type="text" id="temporary_account" name="temporary_account">
+      <button type="submit">Submit</button>
+    </form>
+    <div class="management-buttons">
+      <a href="https://${WorkerURL}/token">Token Management</a>
+      <a href="https://${WorkerURL}/user">User Management</a>
+    </div>
+    <div class="usage-return-buttons">
+      <a href="https://${WorkerURL}/usage" class="usage-link">Query User Usage</a>
+      <a href="https://${WorkerURL}" class="return-button">Return</a>
+    </div>
+    <div style="height: 20px;"></div>
+    <div class="cf-turnstile" data-sitekey="${turnstileSiteKey}" data-callback="onTurnstileCallback"></div>
+  </div>
+  <script>
+  function onTurnstileCallback(token) {
+    document.getElementById('cf-turnstile-response').value = token;
+  }
+
+  document.getElementById('manageAccountForm').addEventListener('submit', function(event) {
+    if (!document.getElementById('cf-turnstile-response').value) {
+      alert('Please complete the verification.');
+      event.preventDefault();
+    }
+  });
+  </script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</body>
+</html>
+
   `;
 }
 
@@ -867,21 +864,17 @@ async function getAdminHTML() {
 
 
 //user功能
-// 使用哈希函数加密username
 function generatePassword(token) {
   let hash = 7
   for (let i = 0; i < token.length; i++) {
     const char = token.charCodeAt(i)
     hash = (hash << 5) - hash + char
-    hash = hash & hash // Convert to 32bit integer
+    hash = hash & hash
   }
-  // 将哈希值转换为正数，并转换为字符串
   let hashStr = Math.abs(hash).toString()
-  // 如果 hashStr 长度不足 10 位，用 '7' 填充
   while (hashStr.length < 15) {
     hashStr = '7' + hashStr
   }
-  // 截取前10位作为密码
   return hashStr.substring(0, 15)
 }
 async function handleUserGetRequest() {
@@ -1078,14 +1071,12 @@ async function getToCheckAccountNumber(userName, antype) {
   return 1;  // 返回 1 表示没有找到符合条件的账户
 }
 async function handleQueryRequest(accessToken, shareToken) {
-  const gpt35Limit = await queryLimit(accessToken, shareToken, 'gpt35_limit');
-  const gpt4Limit = await queryLimit(accessToken, shareToken, 'gpt4_limit');
+  const limits = await queryLimits(accessToken, shareToken);
 
-  return `Usage: GPT-4:${gpt4Limit}, GPT-3.5:${gpt35Limit}`;
-  //return new Response(responseText, { headers: { 'Content-Type': 'text/plain' } });
+  return `Usage: GPT-4: ${limits.gpt4Limit}, GPT-3.5: ${limits.gpt35Limit}`;
 }
 
-async function queryLimit(accessToken, shareToken, limitType) {
+async function queryLimits(accessToken, shareToken) {
   const url = `https://chat.oaifree.com/token/info/${shareToken}`;
   const response = await fetch(url, {
     method: 'GET',
@@ -1100,8 +1091,10 @@ async function queryLimit(accessToken, shareToken, limitType) {
   }
 
   const result = await response.json();
-  //console.log('Fetch response:', result);
-  return result[limitType];
+  return {
+    gpt4Limit: result.gpt4_limit,
+    gpt35Limit: result.gpt35_limit
+  };
 }
 
 async function getUserHTML() {
@@ -1188,7 +1181,7 @@ async function getUserHTML() {
     <input type="hidden" id="cf-turnstile-response" name="cf-turnstile-response" required>
       <label for="adminusername">Admin Username:</label>
       <input type="password" id="adminusername" name="adminusername">
-      <label for="newusers">New Users (comma-separated):</label>
+      <label for="newusers">User Name:</label>
       <input type="text" id="newusers" name="newusers" required>
       <label for="user_type">Operation Type:</label>
       <select id="user_type" name="user_type" required>
@@ -1225,7 +1218,7 @@ async function getUserHTML() {
 
 
 
-//Register
+//Register功能
 async function handleRegisterPostRequest(request) {
   const formData = await request.formData()
   const cdkey = formData.get('cdkey')
@@ -1243,9 +1236,7 @@ async function handleRegisterPostRequest(request) {
   if (!cdkeyList.includes(cdkey)) {
     return generateRegisterResponse('Invalid CDKEY')
   }
-
   await registerlog(username, cdkey);
-
   if (autoDeleteCDK){
   // Remove used CDKEY and update store
   const updatedCdkeyList = cdkeyList.filter(key => key !== cdkey)
@@ -1757,9 +1748,9 @@ async function getRegisterHTML() {
 
 
 
-
 //Usage查询功能
-const MAX_USERS_PER_BATCH = 1;
+const MAX_USERS_PER_BATCH = 10;
+
 async function handleUsageRequest(request) {
   if (request.method === 'POST') {
     const url = new URL(request.url);
@@ -1771,8 +1762,8 @@ async function handleUsageRequest(request) {
       const formData = await request.formData();
       const adminUsername = formData.get('adminusername');
       const queryType = formData.get('queryType');
-      const adminusers = await KV.get('Admin');
-      if (adminusers.split(',').includes(adminUsername)) {
+      const adminUsers = await KV.get('Admin');
+      if (adminUsers.split(',').includes(adminUsername)) {
         const logs = queryType === 'plus' ? ['PlusLoginLogs'] : ['FreeLoginLogs'];
         let usersData = [];
         let uniqueUsers = new Set();
@@ -1781,21 +1772,34 @@ async function handleUsageRequest(request) {
           const loginLogs = await KV.get(log);
           if (loginLogs) {
             const logArray = JSON.parse(loginLogs);
-            logArray.forEach(logEntry => uniqueUsers.add(logEntry.user));
+            const chinaTimeZone = 'Asia/Shanghai';
+            const today = new Date().toLocaleDateString('en-US', { timeZone: chinaTimeZone });
+            const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toLocaleDateString('en-US', { timeZone: chinaTimeZone });
+
+            const recentLogs = logArray.filter(log => {
+              const logDate = new Date(log.timestamp).toLocaleDateString('en-US', { timeZone: chinaTimeZone });
+              return logDate === today || logDate === yesterday;
+            });
+
+            recentLogs.forEach(logEntry => uniqueUsers.add(logEntry.user));
           }
         }
 
         const usersArray = Array.from(uniqueUsers);
         for (let i = 0; i < usersArray.length; i += MAX_USERS_PER_BATCH) {
           const batchUsers = usersArray.slice(i, i + MAX_USERS_PER_BATCH);
-          const batchUsersData = await processBatchUsers(batchUsers);
+          const batchUsersData = await processBatchUsers(batchUsers, queryType);
           usersData = usersData.concat(batchUsersData);
         }
 
-        const htmlResponse = await generateTableHTML(usersData);
+        const htmlResponse = await generateTableHTML(usersData, queryType);
         return new Response(htmlResponse, { headers: { 'Content-Type': 'text/html' } });
       } else {
-        return generateUserResponse('Unauthorized.');
+        const accountNumber = await getToCheckAccountNumber(adminUsername,'Plus');
+        const accessToken = await KV.get(`at_${accountNumber}`) || '1';
+        const shareToken = await getToCheckShareToken(adminUsername,accessToken);
+        const queryLimit = await handleQueryRequest(accessToken,shareToken);
+        return generateUsageResponse(`User: ${adminUsername}, AN: ${accountNumber}, ${queryLimit}`);
       }
     }
   } else {
@@ -1803,25 +1807,18 @@ async function handleUsageRequest(request) {
   }
 }
 
-async function saveUsageLogs(usersData) {
-  const currentLogs = await KV.get('UsageLogs');
-  const logs = currentLogs ? JSON.parse(currentLogs) : [];
-  const chinaTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Shanghai' });
-  logs.push({ timestamp: chinaTime, usersData });
-  await KV.put('UsageLogs', JSON.stringify(logs));
-}
-
-async function processBatchUsers(users) {
+async function processBatchUsers(users, queryType) {
   let usersData = [];
   for (const user of users) {
     const accountNumber = await getTableToCheckAccountNumber(user);
     const accessToken = await KV.get(`at_${accountNumber}`) || '1';
     const shareToken = await getToCheckShareToken(user, accessToken);
-    const usage = await handleTableQueryRequest(accessToken, shareToken);
+    const usage = await queryLimits(accessToken, shareToken);
 
     usersData.push({
       user,
       accountNumber,
+      queryType,
       ...parseUsage(usage)
     });
   }
@@ -1851,16 +1848,17 @@ async function getTableToCheckAccountNumber(userName) {
   return 'Unknown';
 }
 
-
-
-async function handleTableQueryRequest(accessToken, shareToken) {
-  const gpt35Limit = await queryLimit(accessToken, shareToken, 'gpt35_limit');
-  const gpt4Limit = await queryLimit(accessToken, shareToken, 'gpt4_limit');
-  return {
-    gpt4Limit,
-    gpt35Limit
-  };
+async function saveUsageLogs(usersData) {
+  const queryType = usersData[0].queryType;
+  const logType = queryType === 'plus' ? 'PlusUsageLogs' : 'FreeUsageLogs';
+  const currentLogs = await KV.get(logType);
+  const logs = currentLogs ? JSON.parse(currentLogs) : [];
+  const chinaTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Shanghai' });
+  logs.push({ timestamp: chinaTime, usersData });
+  await KV.put(logType, JSON.stringify(logs));
 }
+
+
 async function getTableUserHTML() {
   const turnstileSiteKey = await KV.get('TurnstileSiteKey');
   return `
@@ -1977,9 +1975,7 @@ async function getTableUserHTML() {
   </html>
   `;
 }
-
-
-async function generateUserResponse(message) {
+async function generateUsageResponse(message) {
   const errorHtml = `
     <div class="ulp-field ulp-error">
       <div class="ulp-error-info">
@@ -1996,11 +1992,10 @@ async function generateUserResponse(message) {
   return new Response(responseHtml, { headers: { 'Content-Type': 'text/html' } });
 }
 
-
-async function generateTableHTML(usersData) {
+async function generateTableHTML(usersData, queryType) {
   const logourl = await KV.get('LogoURL');
-  const pageTitle = "User Usage Page";
-  const historyData = await getHistoryData();
+  const pageTitle = "Usage Chart";
+  const historyData = await getHistoryData(queryType);
 
   let combinedData = combineData(usersData, historyData);
   let headerRow = generateHeaderRow(historyData);
@@ -2175,10 +2170,18 @@ function generateTimestampRow(historyData) {
   return historyData.map(h => `<th colspan="2">${h.timestamp}</th>`).join('');
 }
 
-async function getHistoryData() {
-  const historyLogs = await KV.get('UsageLogs');
+async function getHistoryData(queryType) {
+  const logType = queryType === 'plus' ? 'PlusUsageLogs' : 'FreeUsageLogs';
+  const historyLogs = await KV.get(logType);
   return historyLogs ? JSON.parse(historyLogs) : [];
 }
+
+
+
+
+
+
+
 
 
 
