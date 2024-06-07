@@ -272,7 +272,7 @@ async function getInitialHTML() {
   </head>
   <body>
     <div class="container">
-      <h1>配置向导</h1>
+      <h1>Variable Shortcut Entry</h1>
       <form id="variableEntryForm" action="/" method="POST">
         ${getInitialFieldsHTML()}
         <button type="submit">Submit</button>
@@ -325,15 +325,14 @@ async function handlePlusPostRequest(request) {
   const accountUsers = formData.get('account_users'); 
   const turnstileResponse = formData.get('cf-turnstile-response');
 
-    // 验证 Turnstile 响应
-    if (!turnstileResponse || !await verifyTurnstile(turnstileResponse)) {
-      return generatePlusResponse('Turnstile verification failed',adminuserName);
-    }
-  
+  // 验证 Turnstile 响应
+  if (!turnstileResponse || !await verifyTurnstile(turnstileResponse)) {
+    return generatePlusResponse('Turnstile verification failed', adminuserName);
+  }
 
   // 检查参数是否存在
   if (!adminuserName || !refreshToken || !accountNumber) {
-    return generatePlusResponse(`Missing parameters: ${!adminuserName ? 'adminusername ' : ''}${!refreshToken ? 'refresh_token ' : ''}${!accountNumber ? 'account_number ' : ''}`,adminuserName);
+    return generatePlusResponse(`Missing parameters: ${!adminuserName ? 'adminusername ' : ''}${!refreshToken ? 'refresh_token ' : ''}${!accountNumber ? 'account_number ' : ''}`, adminuserName);
   }
 
   // 获取 adminusers 列表
@@ -344,148 +343,149 @@ async function handlePlusPostRequest(request) {
 
   // 检查用户名是否存在于 adminusers 列表中
   if (!adminusers.split(',').includes(adminuserName)) {
-    return generatePlusResponse('Unauthorized access.',adminuserName);
+    return generatePlusResponse('Unauthorized access.', adminuserName);
   }
 
-   // 处理 JSON 格式的 refreshToken
-   let jsonAccessToken, jsonRefreshToken;
-   try {
-     const tokenData = JSON.parse(refreshToken);
-     if (tokenData.access_token && tokenData.refresh_token) {
-       jsonAccessToken = tokenData.access_token;
-       jsonRefreshToken = tokenData.refresh_token;
-     }
-     else if (tokenData.accessToken) {
+  // 处理 JSON 格式的 refreshToken
+  let jsonAccessToken, jsonRefreshToken;
+  try {
+    const tokenData = JSON.parse(refreshToken);
+    if (tokenData.access_token && tokenData.refresh_token) {
+      jsonAccessToken = tokenData.access_token;
+      jsonRefreshToken = tokenData.refresh_token;
+    } else if (tokenData.accessToken) {
       jsonAccessToken = tokenData.accessToken;
       jsonRefreshToken = '';
-      
     }
-   } catch (e) {
-     // 输入不是 JSON 格式
-   }
- 
+  } catch (e) {
+    // 输入不是 JSON 格式
+  }
 
-  //更新跟车users
+  // 更新跟车 users
   if (accountUsers) {
-      // 获取当前 users 数据并更新
-      const currentUsers = await KV.get('VIPUsers');
-      const newUsers = accountUsers.split(',').map(vipuser => `${vipuser}_${accountNumber}`).join(',');
-      const updatedUsers = `${currentUsers},${newUsers}`;
-      await KV.put('VIPUsers', updatedUsers);
+    // 获取当前 users 数据并更新
+    const currentUsers = await KV.get('VIPUsers');
+    const newUsers = accountUsers.split(',').map(vipuser => `${vipuser}_${accountNumber}`).join(',');
+    const updatedUsers = `${currentUsers},${newUsers}`;
+    await KV.put('VIPUsers', updatedUsers);
+  }
+
+  // 批量处理非 JSON 格式的 token
+  if (!jsonAccessToken && refreshToken.includes(',')) {
+    const tokens = refreshToken.split(',');
+    let currentAccountNumber = parseInt(accountNumber);
+
+    for (const token of tokens) {
+      const result = await processToken(token.trim(), currentAccountNumber, adminuserName);
+      currentAccountNumber++;
     }
 
+    return generatePlusResponse('Batch processing completed.', adminuserName);
+  }
+
+  // 单个 token 处理
+  const result = await processToken(refreshToken, accountNumber, adminuserName);
+  return result;
+}
+
+async function processToken(token, accountNumber, adminuserName) {
   // 更新 KV 库
   const rtKey = `rt_${accountNumber}`;
   const atKey = `at_${accountNumber}`;
 
-  if (jsonAccessToken) {
-    // 更新两个 token
-    await KV.put(atKey, jsonAccessToken);
-    await KV.put(rtKey, jsonRefreshToken);
-    await addToAliveAccountList(jsonAccessToken,accountNumber);
-  
-    return generatePlusResponse(`account_number:\n${accountNumber}\n\nrefresh_token:\n${jsonRefreshToken}\n\naccess_token:\n${jsonAccessToken}`,adminuserName);
+  // 使用非 JSON 格式的 token
+  if (token.startsWith('fk-')) {
+    await KV.put(atKey, token);
+    await addToAliveAccountList('', accountNumber);
+
+    return generatePlusResponse(`Share token stored directly`, adminuserName);
   }
-  
-  
- //使用佬友的sharetoken
- if (refreshToken.startsWith('fk-')) {
- // 更新 KV 库
-      await KV.put(atKey, refreshToken);
-      await addToAliveAccountList('',accountNumber);
 
-    return generatePlusResponse(`Share token stored directly`,adminuserName);
+  // rt 长度检查,如果大于 50,则视为 at 则不请求新的 access token
+  if (token.length > 50) {
+    await KV.put(atKey, token);
+    await addToAliveAccountList(token, accountNumber);
+
+    return generatePlusResponse(`Access token stored directly`, adminuserName);
+  }
+
+  const url = 'https://token.oaifree.com/api/auth/refresh';
+
+  // 发送 POST 请求
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+    },
+    body: `refresh_token=${token}`
+  });
+
+  // 检查响应状态
+  if (response.ok) {
+    const data = await response.json();
+    const newAccessToken = data.access_token;
+
+    // 更新两个 token
+    await KV.put(atKey, newAccessToken);
+    await KV.put(rtKey, token);
+    await addToAliveAccountList(newAccessToken, accountNumber);
+
+    return generatePlusResponse(`account_number:\n${accountNumber}\n\nrefresh_token:\n${token}\n\naccess_token:\n${newAccessToken}`, adminuserName);
+  } else {
+    return generatePlusResponse('Error fetching access token, Bad refresh token.', adminuserName);
+  }
 }
 
-     // rt 长度检查,如果大于50,则视为at则不请求新的 access token
-     if (refreshToken.length > 50) {
-      // 更新 KV 库
-      await KV.put(atKey, refreshToken);
-      await addToAliveAccountList(refreshToken,accountNumber);
-    return generatePlusResponse(`Access token stored directly`,adminuserName);
-    }
-
- const url = 'https://token.oaifree.com/api/auth/refresh';
-
- // 发送 POST 请求
- const response = await fetch(url, {
-     method: 'POST',
-     headers: {
-         'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-     },
-     body: `refresh_token=${refreshToken}`
- });
-
- // 检查响应状态
- if (response.ok) {
-     const data = await response.json();
-     const newAccessToken = data.access_token;
-
-     // 更新两个token
-     await KV.put(atKey, newAccessToken);
-     await KV.put(rtKey, refreshToken);
-     await addToAliveAccountList(newAccessToken,accountNumber);
-
-    return generatePlusResponse(`account_number:\n${accountNumber}\n\nrefresh_token:\n${refreshToken}\n\naccess_token:\n${newAccessToken}`,adminuserName);
-    } else {
-      return generatePlusResponse('Error fetching access token, Bad refresh token.',adminuserName);
-    }
-
-}
 async function handlePlusGetRequest() {
   const html = await getPlusHTML();
   return new Response(html, { headers: { 'Content-Type': 'text/html' } });
 }
 
 async function checkAccountType(access_token) {
-  // 构建API请求
+  // 构建 API 请求
   const apiRequest = new Request('https://api.oaifree.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${access_token}`
-      },
-      body: JSON.stringify({
-          "model": "gpt-3.5-turbo",
-          "messages": [
-              {"role": "user", "content": "hi"}
-          ],
-          "max_tokens": 1
-      })
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${access_token}`
+    },
+    body: JSON.stringify({
+      "model": "gpt-3.5-turbo",
+      "messages": [
+        { "role": "user", "content": "hi" }
+      ],
+      "max_tokens": 1
+    })
   });
 
   try {
-      // 发送API请求并获取响应
-      const apiResponse = await fetch(apiRequest);
-     // const responseBody = await apiResponse.text();
-      // 记录响应状态和响应体
-     // console.log(`Response status: ${apiResponse.status}, Response body: ${responseBody}`);
-      if (apiResponse.status === 401) { //普号/sharetokne/失效账号
-         return 'Free';
-      } else {
-          return 'Plus';//正常返回的plus号
-      }
+    // 发送 API 请求并获取响应
+    const apiResponse = await fetch(apiRequest);
+    // 记录响应状态
+    if (apiResponse.status === 401) { // 普号 / sharetoken / 失效账号
+      return 'Free';
+    } else {
+      return 'Plus'; // 正常返回的 plus 号
+    }
   } catch (error) {
-     // console.error('Error fetching API:', error);
+    // 错误处理
   }
 }
 
-async function addToAliveAccountList(accessToken,accountNumber) {
+async function addToAliveAccountList(accessToken, accountNumber) {
   // 获取当前的 aliveaccount 并更新
   const accountType = await checkAccountType(accessToken);
-  const aliveAccountsKey = `${accountType}AliveAccounts`
-  
+  const aliveAccountsKey = `${accountType}AliveAccounts`;
+
   let aliveAccount = await KV.get(aliveAccountsKey);
   let aliveAccountList = aliveAccount ? aliveAccount.split(',') : [];
   if (!aliveAccountList.includes(accountNumber)) {
     aliveAccountList.push(accountNumber);
-    
     await KV.put(aliveAccountsKey, aliveAccountList.join(','));
   }
 }
 
-
-async function generatePlusResponse(message,adminuserName) {
+async function generatePlusResponse(message, adminuserName) {
   const errorHtml = `
     <div class="ulp-field ulp-error">
       <div class="ulp-error-info">
@@ -497,9 +497,7 @@ async function generatePlusResponse(message,adminuserName) {
 
   const replacements = [
     { target: '<button type="submit">Submit</button>', replacement: errorHtml + '<button class="continue-btn" type="submit">Continue</button>' },
-    // 在这里添加更多的替换规则
     { target: '<input type="password" id="adminsername" name="adminusername" required>', replacement: `<input type="password" id="adminsername" name="adminusername" value="${adminuserName}" required>` },
-    // 继续添加替换规则
   ];
 
   const html = await getPlusHTML();
@@ -513,14 +511,14 @@ async function generatePlusResponse(message,adminuserName) {
 }
 
 async function getPlusHTML() {
-  const WorkerURL=await KV.get('WorkerURL');
-  const turnstileSiteKey=await KV.get('TurnstileSiteKey');
+  const WorkerURL = await KV.get('WorkerURL');
+  const turnstileSiteKey = await KV.get('TurnstileSiteKey');
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Token  Management</title>
+  <title>Token Management</title>
   <style>
     body {
       display: flex;
@@ -593,10 +591,10 @@ async function getPlusHTML() {
       line-height: 1;
       text-align: left;
       color: #d00e17;
-  }
-  .ulp-input-error-icon {
+    }
+    .ulp-input-error-icon {
       margin-right: 4px;
-  }
+    }
   </style>
 </head>
 <body>
@@ -626,20 +624,21 @@ async function getPlusHTML() {
   <script>
   function onTurnstileCallback(token) {
     document.getElementById('cf-turnstile-response').value = token;
-}
+  }
 
-document.getElementById('managePlus').addEventListener('submit', function(event) {
+  document.getElementById('managePlus').addEventListener('submit', function(event) {
     if (!document.getElementById('cf-turnstile-response').value) {
-        alert('Please complete the verification.');
-        event.preventDefault();
+      alert('Please complete the verification.');
+      event.preventDefault();
     }
-});
-</script>
+  });
+  </script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </body>
 </html>
 `;
 }
+
 
 
 
@@ -1076,26 +1075,57 @@ async function handleQueryRequest(accessToken, shareToken) {
   return `Usage: GPT-4: ${limits.gpt4Limit}, GPT-3.5: ${limits.gpt35Limit}`;
 }
 
-async function queryLimits(accessToken, shareToken) {
-  const url = `https://chat.oaifree.com/token/info/${shareToken}`;
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    }
-  });
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch limits');
+
+async function queryLimits(accessToken, shareToken) {
+  const CACHE_TTL = 60; // 缓存时间，单位为秒
+  const MAX_RETRIES = 3; // 最大重试次数
+  const cacheKey = `limits_${shareToken}`;
+  const cachedData = await KV.get(cacheKey);
+  if (cachedData) {
+    return JSON.parse(cachedData);
   }
 
-  const result = await response.json();
-  return {
-    gpt4Limit: result.gpt4_limit,
-    gpt35Limit: result.gpt35_limit
-  };
+  const url = `https://chat.oaifree.com/token/info/${shareToken}`;
+  let attempt = 0;
+
+  while (attempt < MAX_RETRIES) {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch limits (status: ${response.status})`);
+      }
+
+      const result = await response.json();
+      const data = {
+        gpt4Limit: result.gpt4_limit,
+        gpt35Limit: result.gpt35_limit
+      };
+
+      await KV.put(cacheKey, JSON.stringify(data), { expirationTtl: CACHE_TTL }); // 缓存数据
+      return data;
+
+    } catch (error) {
+      console.error(`Attempt ${attempt + 1} failed:`, error);
+      attempt += 1;
+
+      if (attempt >= MAX_RETRIES) {
+        throw new Error('Failed to fetch limits after multiple attempts');
+      }
+
+      // 可选：在重试前等待一段时间
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
 }
+
 
 async function getUserHTML() {
   const turnstileSiteKey=await KV.get('TurnstileSiteKey');
@@ -1748,9 +1778,10 @@ async function getRegisterHTML() {
 
 
 
-//Usage查询功能
-const MAX_USERS_PER_BATCH = 10;
 
+
+//Usage查询功能
+const MAX_USERS_PER_BATCH = 5;
 async function handleUsageRequest(request) {
   if (request.method === 'POST') {
     const url = new URL(request.url);
@@ -1795,7 +1826,7 @@ async function handleUsageRequest(request) {
         const htmlResponse = await generateTableHTML(usersData, queryType);
         return new Response(htmlResponse, { headers: { 'Content-Type': 'text/html' } });
       } else {
-        const accountNumber = await getToCheckAccountNumber(adminUsername,'Plus');
+        const accountNumber = await getTableToCheckAccountNumber(adminUsername);
         const accessToken = await KV.get(`at_${accountNumber}`) || '1';
         const shareToken = await getToCheckShareToken(adminUsername,accessToken);
         const queryLimit = await handleQueryRequest(accessToken,shareToken);
@@ -1808,22 +1839,34 @@ async function handleUsageRequest(request) {
 }
 
 async function processBatchUsers(users, queryType) {
-  let usersData = [];
-  for (const user of users) {
-    const accountNumber = await getTableToCheckAccountNumber(user);
-    const accessToken = await KV.get(`at_${accountNumber}`) || '1';
-    const shareToken = await getToCheckShareToken(user, accessToken);
-    const usage = await queryLimits(accessToken, shareToken);
-
-    usersData.push({
+  const usersData = await Promise.all(users.map(user => processSingleUser(user, queryType).catch(error => {
+    console.error(`Error processing user ${user}:`, error);
+    return {
       user,
-      accountNumber,
+      accountNumber: 'Unknown',
       queryType,
-      ...parseUsage(usage)
-    });
-  }
+      gpt4: 'Error',
+      gpt35: 'Error'
+    };
+  })));
   return usersData;
 }
+
+async function processSingleUser(user, queryType) {
+  const accountNumber = await getTableToCheckAccountNumber(user);
+  const accessToken = await KV.get(`at_${accountNumber}`) || '1';
+  const shareToken = await getToCheckShareToken(user, accessToken);
+  const usage = await queryLimits(accessToken, shareToken);
+
+  return {
+    user,
+    accountNumber,
+    queryType,
+    ...parseUsage(usage)
+  };
+}
+
+
 
 function parseUsage(usage) {
   return {
@@ -1994,7 +2037,7 @@ async function generateUsageResponse(message) {
 
 async function generateTableHTML(usersData, queryType) {
   const logourl = await KV.get('LogoURL');
-    const pageTitle = "Usage Chart";
+  const pageTitle = "Usage Chart";
   const historyData = await getHistoryData(queryType);
 
   let combinedData = combineData(usersData, historyData);
@@ -2288,7 +2331,7 @@ if (turnstileResponse !== 'do not need Turnstle' && (!turnstileResponse || !awai
 const proxiedDomain = await KV.get('WorkerURL');
 const status = await KV.get('Status');
 const GPTState = await getGPTStatus();
-if ((GPTState !== 'operational')&&(!status)){
+if ((GPTState == 'major_performance')&&(!status)){
   await loginlog(userName, 'Bad_OAIStatus','Error');
   return generateLoginResponse(`OpenAI service is under maintenance.<br>Official status: ${GPTState} <br>More details: https://status.openai.com`);
 }
