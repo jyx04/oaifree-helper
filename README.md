@@ -21,10 +21,11 @@
 
 # Worker 部署（一键直达）
    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jyx04/oaifree_helper)
-   - 配置完成后，请按照下方配置Turnstile人机验证服务教程，获得`站点密钥`和`密钥`
+   - 一键为全家桶，包含主服务/选车面板服务/API服务/反代voice服务，且无需手动关联KV，即点即用
+   - 配置完成后，请按照下方Turnstile人机验证服务教程，获得`站点密钥`和`密钥`
    - 访问部署域名，在初始界面一键保存各项变量，完成部署！
 # Worker 部署（手动版）
-### 1. 配置Turnstile人机验证服务
+### 1. 配置Turnstile人机验证服务（不可跳过）
    - 注册/登陆你的cloudflare，右上角可设置语言为中文。
    - 左侧找到`Turnstile`，选择`添加站点`
    - `站点名称`随意，`域`为：`workers.dev`或你自己的域名
