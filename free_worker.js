@@ -162,7 +162,7 @@ if (url.pathname === '/auth/login_auth0') {
   url.host = 'new.oaifree.com';
   const modifiedRequest = new Request(url, request);
   if(voiceURL){
-  modifiedRequest.headers.set('X-Voice-Base', `${voiceURL}`);
+  modifiedRequest.headers.set('X-Voice-Base', `https://${voiceURL}`);
   }
   const response = await fetch(modifiedRequest);
   
