@@ -105,3 +105,13 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: wrangler deploy
+
+      - name: Generate wrangler.toml for voice worker
+        run: |
+          echo "name = \"voice\"" > wrangler.toml
+          echo "workers_dev = true" >> wrangler.toml
+          echo "main = \"voice_worker.js\"" >> wrangler.toml
+          echo "compatibility_date = \"2024-06-01\"" >> wrangler.toml
+
+      - name: Publish api worker to Cloudflare Workers
+        run: wrangler deploy
