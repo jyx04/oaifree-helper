@@ -16,6 +16,8 @@
    - 点击登录页Logo跳转管理面板,包含用户管理、token池管理、用量查询、token批量导出
    - 支持替换Chat页面显示的头像/用户名/邮箱【新】
    <img width="500" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/3675a0bf-efd4-4cf3-a42b-4e96fab83bb2">
+   <img width="500" alt="image" src="https://github.com/jyx04/oaifree-helper/assets/166741903/6bc6491b-8c12-47b9-a426-d912c6a44a8c">
+   <img width="500" alt="image" src="https://github.com/jyx04/oaifree-helper/assets/166741903/0cd4e326-5580-4c45-8868-8474bbaf3756">
    <img width="200" alt="image" src="https://github.com/jyx04/oaifree-helper/assets/166741903/d2cc9a8f-598f-4249-8aa3-4710a3e2ab06">
 
 
@@ -92,6 +94,9 @@ at_2
    - 通过文件`api_worker.js`部署worker，即可配置基于plus号池的api服务。（一键部署已包含）
    - 本接口同样采用始皇的服务，使用plus号池内账号的token，随机调取，失效自动禁用
    - api地址请参考始皇的服务文档，api key为admin密码
+   - OneAPI/NewAPI示例：
+   - <img width="300" alt="image" src="https://github.com/jyx04/oaifree-helper/assets/166741903/a01912c5-f43e-4c62-8b76-d47d80aeca00">
+
 
 ### 6. 反代始皇的Voice服务（新增）
    - 通过文件`voice_worker.js`部署voice服务的反代worker。（一键部署已包含）
