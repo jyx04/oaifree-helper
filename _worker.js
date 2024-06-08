@@ -2686,10 +2686,11 @@ if (userName.length > 50) {
 
 
 // 如果输入用户名fk开头，直接视作sharetoken
+if (userName){
 if (userName.startsWith('fk-')) {
  const shareToken = userName;
  return Response.redirect(await getOAuthLink(shareToken, proxiedDomain), 302);
-}
+}}
  const userRegex = new RegExp(`^${userName}_(\\d+)$`);
  let fullUserName = userName;
  let foundSuffix = false;
