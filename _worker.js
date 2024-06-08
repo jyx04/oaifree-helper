@@ -55,6 +55,7 @@ async function usermatch(userName, usertype) {
 //各种路径的功能
 async function handleRequest(request) {
   const url = new URL(request.url);
+  const voiceURL = await KV.get('VoiceURL');
   const admin = await KV.get('Admin');
   //处理直链登陆形式
   const params = new URLSearchParams(url.search);
@@ -64,8 +65,6 @@ async function handleRequest(request) {
       return await handleLogin(userName, accountNumber, 'do not need Turnstle','');
   }
 
-  
-    
   if (!admin){
       return handleInitialRequest(request);
   }
@@ -90,6 +89,15 @@ async function handleRequest(request) {
     }
   }
 
+  if(url.pathname.startsWith('/export')){
+    if (request.method === 'GET') {
+      return handleExportGetRequest(request);
+    }  else if (request.method === 'POST') {
+      return handleExportPostRequest(request);
+    }else {
+      return new Response('Method not allowed', { status: 405 });
+    }
+   }
   if (url.pathname.startsWith('/user')) {
     if (request.method === 'GET') {
       return handleUserGetRequest();
@@ -115,7 +123,9 @@ async function handleRequest(request) {
  if(url.pathname.startsWith('/usage')){
   return handleUsageRequest(request)
  }
-  // Specific handling for /auth/login_auth0
+
+ 
+  // for oaifree
   if (url.pathname === '/auth/login_auth0') {
     if (request.method === 'GET') {
       return handleLoginGetRequest(request);
@@ -125,8 +135,11 @@ async function handleRequest(request) {
       return new Response('Method not allowed', { status: 200 });
     }
   }
+
   if (url.pathname === '/auth/login') {
-   /* const token = url.searchParams.get('token');
+   /* 
+   //如需退出登陆立即返回登陆页，取消注释此段
+   const token = url.searchParams.get('token');
     if (!token) {
       if (request.method === 'GET') {
         return handleLoginGetRequest(request);
@@ -141,11 +154,15 @@ async function handleRequest(request) {
     return fetch(new Request(url, request));
   }
 
-  // Forward other requests to new.oaifree.com
+  //Voice地址和其他
   url.host = 'new.oaifree.com';
-  const response = await fetch(new Request(url, request));
-  
-  // Special case for /backend-api/conversations
+  const modifiedRequest = new Request(url, request);
+  if(voiceURL){
+  modifiedRequest.headers.set('X-Voice-Base', `${voiceURL}`);
+  }
+  const response = await fetch(modifiedRequest);
+
+  //去掉小锁
   if (url.pathname === '/backend-api/conversations') {
     const data = await response.json();
     data.items = data.items.filter(item => item.title !== "🔒");
@@ -154,9 +171,7 @@ async function handleRequest(request) {
       headers: response.headers
     });
   }
-
-  return response;
-  
+return response  
 }
 
 //初始化信息填入功能
@@ -180,7 +195,7 @@ async function handleInitialPostRequest(request) {
   const fields = [
     'TurnstileKeys', 'TurnstileSiteKey', 'Users', 'VIPUsers', 'FreeUsers', 
     'Admin', 'ForceAN', 'SetAN', 'PlusMode', 'FreeMode', 'WebName', 
-    'WorkerURL', 'LogoURL', 'CDKEY', 'AutoDeleteCDK', 'FKDomain', 'Status',
+    'WorkerURL','VoiceURL', 'LogoURL', 'CDKEY', 'AutoDeleteCDK', 'FKDomain', 'Status',
     'PlusAliveAccounts', 'FreeAliveAccounts', 'rt_1', 'rt_2', 'at_1', 'at_2'
   ];
 
@@ -189,9 +204,14 @@ async function handleInitialPostRequest(request) {
     if (field === 'WorkerURL' && !value) {
       value = (new URL(request.url)).hostname;
     }
+    if (field === 'VoiceURL' && !value) {
+      let hostname = (new URL(request.url)).hostname;
+      let parts = hostname.split('.');
+      parts[0] = 'voice';
+      value = parts.join('.');
+    }
     if (value) {
-      // @ts-ignore
-      await oai_global_variables.put(field, value);
+      await KV.put(field, value);
     }
   }
 
@@ -285,10 +305,11 @@ async function getInitialHTML() {
 
 function getInitialFieldsHTML() {
   const fields = [
-    { name: 'Admin', label: '【必填】管理员 (用于管理面板的验证使用，且可看所有聊天记录)' },
-    { name: 'TurnstileKeys', label: '【必填】Turnstile密钥' },
-    { name: 'TurnstileSiteKey', label: '【必填】Turnstile站点密钥' },
-    { name: 'WorkerURL', label: '站点域名 (无需https://【选填，不填则自动储存当前worker域名】' },
+    { name: 'Admin', label: '【必填】管理员 (用于管理面板的验证使用，且可看所有聊天记录)' ,isrequired: 'required'},
+    { name: 'TurnstileKeys', label: '【必填】Turnstile密钥' ,isrequired: 'required'},
+    { name: 'TurnstileSiteKey', label: '【必填】Turnstile站点密钥' ,isrequired: 'required'},
+    { name: 'WorkerURL', label: '站点域名 (无需https://【选填，不填则自动储存worker的域名】' },
+    { name: 'VoiceURL', label: 'voice服务域名 (无需https://【选填，不填则自动储存worker的域名】' },
     { name: 'WebName', label: '站点名称' },
     { name: 'LogoURL', label: 'Logo图片地址 (需https://)' },
     { name: 'Users', label: '默认用户 (以aaa,bbb,ccc形式填写)' },
@@ -310,7 +331,7 @@ function getInitialFieldsHTML() {
 
   return fields.map(field => `
     <label for="${field.name}">${field.label}</label>
-    <input type="text" id="${field.name}" name="${field.name}">
+    <input type="text" id="${field.name}" name="${field.name}" ${field.isrequired}>
   `).join('');
 }
 
@@ -640,6 +661,216 @@ async function getPlusHTML() {
 }
 
 
+//token export功能
+async function handleExportGetRequest(request) {
+  const url = new URL(request.url);
+  const adminUserName = url.searchParams.get('admin');
+  const tokenType = url.searchParams.get('token');
+  const accountType = url.searchParams.get('type');
+  if (!adminUserName || !tokenType || !accountType) {
+    const html = await getExportHTML();
+    return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+  }
+  const adminusers = await KV.get('Admin');
+  if (adminusers.split(',').includes(adminUserName)) {
+  const validTokenTypes = ['rt', 'at'];
+  const validAccountTypes = ['Free', 'Plus'];
+  if (!validTokenTypes.includes(tokenType) || !validAccountTypes.includes(accountType)) {
+    return new Response('Invalid token or account type', { status: 400 });
+  }
+  return await exportToken(tokenType, accountType);
+}
+else{return new Response('Unauthorized access', { status: 403 });
+}
+}
+
+async function exportToken(tokenType, accountType) {
+  const accountTypeKey = `${accountType}AliveAccounts`;
+
+  // 获取对应类型的账户列表
+  let aliveAccount = await KV.get(accountTypeKey);
+  if (!aliveAccount) {
+    return new Response('No accounts found', { status: 404 });
+  }
+
+  let accountNumbers = aliveAccount.split(',');
+
+  // 获取所有账户号码对应的令牌
+  let tokens = [];
+  for (let accountNumber of accountNumbers) {
+    let tokenKey = `${tokenType}_${accountNumber}`;
+    let token = await KV.get(tokenKey);
+    if (token) {
+      tokens.push(token);
+    }
+  }
+
+  // 创建txt文件
+  let fileContent = tokens.join('\n');
+  let fileName = `${tokenType}.txt`;
+
+  // 创建文件响应
+  return new Response(fileContent, {
+    headers: {
+      'Content-Type': 'text/plain',
+      'Content-Disposition': `attachment; filename=${fileName}`
+    }
+  });
+}
+async function handleExportPostRequest(request) {
+  const formData = await request.formData();
+  const adminPassword = formData.get('adminpassword');
+  const tokenType = formData.get('token_type');
+  const accountType = formData.get('account_type');
+  const operationType = formData.get('operation_type');
+  const turnstileResponse = formData.get('cf-turnstile-response');
+
+  // 验证 Turnstile 响应
+  if (!turnstileResponse || !await verifyTurnstile(turnstileResponse)) {
+    return new Response('Turnstile verification failed', { status: 403 });
+  }
+
+  // 获取 adminusers 列表
+  const adminusers = await KV.get('Admin');
+  if (!adminusers) {
+    return new Response('Admin list is empty', { status: 500 });
+  }
+
+  // 检查管理员密码是否正确
+  if (adminusers.split(',').includes(adminPassword)) {
+   
+  if (operationType=='txt'){
+  // 验证 tokenType 和 accountType 是否有效
+  const validTokenTypes = ['rt', 'at'];
+  const validAccountTypes = ['Free', 'Plus'];
+  if (!validTokenTypes.includes(tokenType) || !validAccountTypes.includes(accountType)) {
+    return new Response('Invalid token or account type', { status: 400 });
+  }
+
+  // 调用 exportToken 函数并返回结果
+  return await exportToken(tokenType, accountType);}
+  else{
+    const WorkerURL=await KV.get('WorkerURL');
+    return new Response(`https://${WorkerURL}/export?admin=${adminPassword}&type=${accountType}&token=${tokenType}`, { status: 200 });
+  }
+}
+
+else {return new Response('Unauthorized access', { status: 403 });
+}
+}
+
+
+async function getExportHTML() {
+  const turnstileSiteKey = await KV.get('TurnstileSiteKey');
+  return `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Export Tokens</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f2f2f5;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        margin: 0;
+      }
+      .export-container {
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+      }
+      .export-container h1 {
+        margin-bottom: 24px;
+        font-size: 28px;
+        color: #333;
+        font-weight: 600;
+      }
+      .export-container label {
+        display: block;
+        font-size: 16px;
+        margin-bottom: 8px;
+        color: #555;
+        text-align: left;
+      }
+      .export-container input, .export-container select {
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        box-sizing: border-box;
+        width: 100%;
+        margin-bottom: 20px;
+        height: 48px;
+      }
+      .export-container button {
+        padding: 12px;
+        background-color: #007aff;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      .export-container button:hover {
+        background-color: #005fcb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="export-container">
+      <h1>Export Tokens</h1>
+      <form id="exportTokens" action="/export" method="POST">
+        <label for="adminpassword">Admin Password:</label>
+        <input type="password" id="adminpassword" name="adminpassword" required>
+        <label for="token_type">Token Type:</label>
+        <select id="token_type" name="token_type" required>
+          <option value="rt">Refresh Token</option>
+          <option value="at">Access Token</option>
+        </select>
+        <label for="account_type">Account Type:</label>
+        <select id="account_type" name="account_type" required>
+          <option value="Free">Free</option>
+          <option value="Plus">Plus</option>
+        </select>
+        <label for="operation_type">Operation Type:</label>
+        <select id="operation_type" name="operation_type" required>
+          <option value="txt">Download TXT</option>
+          <option value="link">Generate Link</option>
+        </select>
+        <input type="hidden" id="cf-turnstile-response" name="cf-turnstile-response" required>
+        <div class="cf-turnstile" data-sitekey="${turnstileSiteKey}" data-callback="onTurnstileCallback"></div>
+        <button type="submit">Export</button>
+      </form>
+    </div>
+    <script>
+      function onTurnstileCallback(token) {
+        document.getElementById('cf-turnstile-response').value = token;
+      }
+  
+      document.getElementById('exportTokens').addEventListener('submit', function(event) {
+        if (!document.getElementById('cf-turnstile-response').value) {
+          alert('Please complete the verification.');
+          event.preventDefault();
+        }
+      });
+    </script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  </body>
+  </html>
+  `;
+}
+
+
+
 
 
 //admin页面
@@ -773,11 +1004,11 @@ async function getAdminHTML() {
     .login-container button:hover {
       background-color: #005fcb;
     }
-    .management-buttons, .usage-return-buttons {
+    .tokenmanagement-buttons, .usagemanagement-buttons {
       display: flex;
       justify-content: space-between;
     }
-    .management-buttons a, .usage-link, .return-button {
+    .tokenmanagement-buttons a, .usage-link, .return-button {
       display: block;
       padding: 12px;
       border: 1px solid #ddd;
@@ -792,7 +1023,7 @@ async function getAdminHTML() {
       transition: background-color 0.3s;
       margin-top: 10px;
     }
-    .management-buttons a:hover, .usage-link:hover, .return-button:hover {
+    .tokenmanagement-buttons a:hover, .usage-link:hover, .return-button:hover {
       background-color: #005fcb;
     }
     .ulp-field.ulp-error .ulp-error-info {
@@ -828,13 +1059,13 @@ async function getAdminHTML() {
       <input type="text" id="temporary_account" name="temporary_account">
       <button type="submit">Submit</button>
     </form>
-    <div class="management-buttons">
+    <div class="tokenmanagement-buttons">
       <a href="https://${WorkerURL}/token">Token Management</a>
-      <a href="https://${WorkerURL}/user">User Management</a>
+      <a href="https://${WorkerURL}/export">Export Tokens</a>
     </div>
-    <div class="usage-return-buttons">
+    <div class="usagemanagement-buttons">
+    <a href="https://${WorkerURL}/user" class="return-button">User Management</a>
       <a href="https://${WorkerURL}/usage" class="usage-link">Query User Usage</a>
-      <a href="https://${WorkerURL}" class="return-button">Return</a>
     </div>
     <div style="height: 20px;"></div>
     <div class="cf-turnstile" data-sitekey="${turnstileSiteKey}" data-callback="onTurnstileCallback"></div>
@@ -1678,6 +1909,22 @@ async function getRegisterHTML() {
             margin-right: 4px;
         }
 
+        .footer {
+          text-align: center;
+          font-size: 12px;
+          padding: 10px;
+      }
+
+      .footer a {
+          color: black;
+          text-decoration: none;
+      }
+
+      .footer a:hover {
+          text-decoration: none;
+          color: black;
+      }
+
           </style>
           </head>
           <body>
@@ -1735,6 +1982,9 @@ async function getRegisterHTML() {
                       </main>
                   </div>
               </div>
+              <footer class="footer">
+                <p>&copy; All rights reserved. | Powered by <a href="https://linux.do" target="_blank">Pandora</a> & <a href="https://chatgpt.com" target="_blank">ChatGPT</a></p>
+            </footer>
               <script>
                   document.addEventListener('DOMContentLoaded', function() {
                       const cdkeyInput = document.getElementById('cdkey');
@@ -1793,7 +2043,11 @@ async function handleUsageRequest(request) {
       const formData = await request.formData();
       const adminUsername = formData.get('adminusername');
       const queryType = formData.get('queryType');
+      const turnstileResponse = formData.get('cf-turnstile-response')
       const adminUsers = await KV.get('Admin');
+      if (!await verifyTurnstile(turnstileResponse)) {
+        return generateUsageResponse('Turnstile verification failed')
+      }
       if (adminUsers.split(',').includes(adminUsername)) {
         const logs = queryType === 'plus' ? ['PlusLoginLogs'] : ['FreeLoginLogs'];
         let usersData = [];
@@ -2027,6 +2281,7 @@ async function generateUsageResponse(message) {
       </div>
     </div>
   `;
+
   const html = await getTableUserHTML();
   const responseHtml = html.replace(
     '<div class="button-group">',
@@ -2043,147 +2298,198 @@ async function generateTableHTML(usersData, queryType) {
   let combinedData = combineData(usersData, historyData);
   let headerRow = generateHeaderRow(historyData);
   let timestampRow = generateTimestampRow(historyData);
-
   let rows = combinedData.map(user => `
-    <tr class="user-row">
-      <td class="user-name">${user.user}</td>
-      ${user.historyUsage.map(usage => `<td>${usage.gpt4}</td><td>${usage.gpt35}</td>`).join('')}
-      <td>${user.realTimeUsage.gpt4}</td>
-      <td>${user.realTimeUsage.gpt35}</td>
-    </tr>`).join('');
+  <tr class="user-row">
+    <td class="user-sticky user-name">${user.user}</td>
+    ${user.historyUsage.map(usage => `<td>${usage.gpt4}</td><td>${usage.gpt35}</td>`).join('')}
+    <td>${user.realTimeUsage.gpt4}</td>
+    <td>${user.realTimeUsage.gpt35}</td>
+  </tr>`).join('');
 
   return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>User Usage</title>
-      <style>
-        body {
-          font-family: Arial, sans-serif;
-          margin: 0;
-          padding: 0;
-          background-color: #f2f2f5;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        .header {
-          display: flex;
-          align-items: center;
-          margin: 20px;
-          width: 80%;
-        }
-        .logo {
-          height: 50px;
-          margin-right: 20px;
-        }
-        .title {
-          font-size: 24px;
-          font-weight: bold;
-        }
-        table {
-          width: 80%;
-          border-collapse: collapse;
-          margin: 20px 0;
-          font-size: 18px;
-          text-align: left;
-          position: relative;
-        }
-        th, td {
-          padding: 12px;
-          border: 1px solid #ddd;
-        }
-        th {
-          background-color: #007aff;
-          color: white;
-        }
-        .button-group {
-          position: absolute;
-          top: 20px;
-          right: 20px;
-        }
-        .button {
-          margin-left: 10px;
-          padding: 5px 10px;
-          background-color: #007aff;
-          color: white;
-          border: none;
-          cursor: pointer;
-          font-size: 14px;
-          border-radius: 5px;
-        }
-        .user-name.masked {
-          filter: blur(5px);
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <img src="${logourl}" alt="Logo" class="logo">
-        <div class="title">${pageTitle}</div>
-      </div>
-      <div class="button-group">
-        <button class="button" onclick="toggleMask()">Mask/Unmask</button>
-        <button class="button" onclick="saveData()">Save</button>
-      </div>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>User Usage</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f2f2f5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        margin: 20px;
+        width: 80%;
+      }
+      .logo {
+        height: 50px;
+        margin-right: 20px;
+      }
+      .title {
+        font-size: 24px;
+        font-weight: bold;
+      }
+      .table-container {
+        width: 80%;
+        overflow-x: auto;
+        margin: 20px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 18px;
+        text-align: left;
+        position: relative;
+        min-width: 800px;
+      }
+      th, td {
+        padding: 12px;
+        border: 1px solid #ddd;
+      }
+      th {
+        background-color: #007aff;
+        color: white;
+      }
+      .button-group {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+      }
+      .button {
+        margin-left: 10px;
+        padding: 5px 10px;
+        background-color: #007aff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        border-radius: 5px;
+      }
+      .user-name.masked {
+        filter: blur(5px);
+      }
+      th.user-sticky, td.user-sticky {
+        position: sticky;
+        left: 0;
+        color: white;
+        background-color: #007aff;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <img src="${logourl}" alt="Logo" class="logo">
+      <div class="title">${pageTitle}</div>
+    </div>
+    <div class="button-group">
+      <button class="button" onclick="toggleMask()">Mask/Unmask</button>
+      <button class="button" onclick="saveData()">Save</button>
+    </div>
+    <div class="table-container">
       <table>
-        <tr>
-          <th>User</th>
-          ${timestampRow}
-          <th colspan="2">Real-Time Usage</th>
-        </tr>
-        <tr>
-          <th></th>
-          ${headerRow}
-          <th>GPT-4</th>
-          <th>GPT-3.5</th>
-        </tr>
+      <tr>
+      <th class="user-sticky">User</th>
+      ${timestampRow}
+      <th colspan="2">Real-Time Usage</th>
+    </tr>
+    <tr>
+      <th class="user-sticky"></th>
+      ${headerRow}
+      <th>GPT-4</th>
+      <th>GPT-3.5</th>
+    </tr>
         ${rows}
       </table>
-      <script>
-        let isMasked = false;
-
-        function toggleMask() {
-          isMasked = !isMasked;
-          const userNames = document.querySelectorAll('.user-name');
-          userNames.forEach(userName => {
-            if (isMasked) {
-              userName.classList.add('masked');
-            } else {
-              userName.classList.remove('masked');
-            }
-          });
-        }
-        function saveData() {
-          fetch('/usage/save', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(${JSON.stringify(usersData)})
-          })
-          .then(response => response.text())
-          .then(result => alert(result))
-          .catch(error => console.error('Error:', error));
-        }
-
-        document.querySelectorAll('.user-row').forEach(row => {
-          row.addEventListener('mouseover', function() {
-            if (isMasked) {
-              this.querySelector('.user-name').classList.remove('masked');
-            }
-          });
-          row.addEventListener('mouseout', function() {
-            if (isMasked) {
-              this.querySelector('.user-name').classList.add('masked');
-            }
-          });
+    </div>
+    <script>
+      let isMasked = false;
+  
+      function toggleMask() {
+        isMasked = !isMasked;
+        const userNames = document.querySelectorAll('.user-name');
+        userNames.forEach(userName => {
+          if (isMasked) {
+            userName.classList.add('masked');
+          } else {
+            userName.classList.remove('masked');
+          }
         });
-      </script>
-    </body>
-    </html>`;
+      }
+  
+      function saveData() {
+        fetch('/usage/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(${JSON.stringify(usersData)})
+        })
+        .then(response => response.text())
+        .then(result => alert(result))
+        .catch(error => console.error('Error:', error));
+      }
+  
+      document.querySelectorAll('.user-row').forEach(row => {
+        row.addEventListener('mouseover', function() {
+          if (isMasked) {
+            this.querySelector('.user-name').classList.remove('masked');
+          }
+        });
+        row.addEventListener('mouseout', function() {
+          if (isMasked) {
+            this.querySelector('.user-name').classList.add('masked');
+          }
+        });
+      });
+    </script>
+  </body>
+  </html>
+  
+  `;
 }
+
+function combineData(usersData, historyData) {
+  let combinedData = [];
+  let allUsers = new Set(usersData.map(u => u.user).concat(historyData.flatMap(h => h.usersData.map(u => u.user))));
+
+  allUsers.forEach(user => {
+    let historyUsage = historyData.map(h => {
+      let userUsage = h.usersData.find(u => u.user === user);
+      return userUsage ? { gpt4: userUsage.gpt4, gpt35: userUsage.gpt35 } : { gpt4: '', gpt35: '' };
+    });
+    let realTimeUsage = usersData.find(u => u.user === user);
+    combinedData.push({
+      user,
+      historyUsage,
+      realTimeUsage: realTimeUsage ? { gpt4: realTimeUsage.gpt4, gpt35: realTimeUsage.gpt35 } : { gpt4: '', gpt35: '' }
+    });
+  });
+
+  return combinedData;
+}
+
+function generateHeaderRow(historyData) {
+  return historyData.map(h => `<th>GPT-4</th><th>GPT-3.5</th>`).join('');
+}
+
+function generateTimestampRow(historyData) {
+  return historyData.map(h => `<th colspan="2">${h.timestamp}</th>`).join('');
+}
+
+async function getHistoryData(queryType) {
+  const logType = queryType === 'plus' ? 'PlusUsageLogs' : 'FreeUsageLogs';
+  const historyLogs = await KV.get(logType);
+  return historyLogs ? JSON.parse(historyLogs) : [];
+}
+
 
 function combineData(usersData, historyData) {
   let combinedData = [];
@@ -2460,7 +2766,7 @@ accountNumber = await getAccountNumber(fullUserName,initialaccountNumber, antype
  
  if (isTokenExpired(accessToken)) {
       // 给没有refresh token的萌新用（比如我），取消下面这行注释即可享用
-     // return generateLoginResponse('The current access token has not been updated, please contact Joe to update it.', false);
+     // return generateLoginResponse('The current access token has not been updated.', false);
       
       // 如果 Token 过期，执行获取新 Token 的逻辑
       const url = 'https://token.oaifree.com/api/auth/refresh';
@@ -2488,7 +2794,7 @@ accountNumber = await getAccountNumber(fullUserName,initialaccountNumber, antype
      }
  } 
  else {
-   return generateLoginResponse('The current access token has not been updated, please contact Joe to update it.');
+   return generateLoginResponse('The current access token has not been updated.');
  }
  }   
      const finalaccessToken = await KV.get(accessTokenKey);
@@ -3085,6 +3391,22 @@ async function getLoginHTML(setan) {
                        content: "🚫";
                        margin-right: 0px;
                      }
+                     .footer {
+                      text-align: center;
+                      font-size: 12px;
+                      padding: 10px;
+                  }
+          
+                  .footer a {
+                      color: black;
+                      text-decoration: none;
+                  }
+          
+                  .footer a:hover {
+                      text-decoration: none;
+                      color: black;
+                  }
+      
              
          </style>
      </head>
@@ -3149,6 +3471,10 @@ async function getLoginHTML(setan) {
                  </main>
              </div>
          </div>
+         <footer class="footer">
+                <p>&copy; All rights reserved. | Powered by <a href="https://linux.do" target="_blank">Pandora</a> & <a href="https://chatgpt.com" target="_blank">ChatGPT</a></p>
+            </footer>
+            
          <script>
              document.addEventListener('DOMContentLoaded', function() {
                  const helpIcon = document.querySelector('.help-icon');
