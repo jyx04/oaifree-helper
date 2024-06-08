@@ -81,8 +81,21 @@ at_2
    - 通过文件`api_worker.js`部署worker，即可配置基于plus号池的api服务。（一件部署已包含）
    - 本接口同样采用始皇的服务，使用plus号池内账号的token，随机调取，失效自动禁用
    - api地址请参考始皇的服务文档，api key为admin密码
+
+### 6. 反代始皇的Voice服务（新增）
+   - 通过文件`voice_worker.js`部署voice服务的反代worker。（一件部署已包含）
+   - 需在系统KV配置变量`VoiceURL`为此worker的链接（无需https://）
+
+### 7. 批量导出号池token功能（新增）
+   - 见管理员面板的ExportTokens功能
+   - 可选导出Plus/Free号池
+   - 可选生成导出链接or直接下载txt文件
+   - txt文件格式为每行一个token，便于挪至其他服务使用
      
 
 # 日志
  - 建立GitHub项目
  - 创建一键部署，新增选车界面和api服务
+ - 优化用量查询功能
+ - 新增token导出功能，可导出所选号池的rt/at为txt文件
+ - 支持反代始皇新彩蛋：voice服务
