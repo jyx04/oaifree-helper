@@ -46,6 +46,9 @@ TurnstileSiteKey //站点密钥【必填】
 WebName //站点名称
 WorkerURL //站点域名，无需https://若无自己的域名，贼为worker默认域名：[worker名].[用户名].workers.dev【必填】
 LogoURL //图片地址，需https://
+ChatLogoURL //chat界面用户头像地址，需https://
+ChatUesrName //chat界面用户名
+ChatMail //chat界面用户邮箱
 
 Users //默认用户，以aaa,bbb,ccc形式填写，能访问所有车牌
 VIPUsers //vip用户，即私车用户，无速率和时间限制
@@ -102,3 +105,4 @@ at_2
  - 优化用量查询功能
  - 新增token导出功能，可导出所选号池的rt/at为txt文件
  - 支持反代始皇新彩蛋：voice服务
+ - 支持替换Chat页面头像/用户名/邮箱
