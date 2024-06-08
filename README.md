@@ -14,6 +14,7 @@
    - 自动检测官方服务状态，如遇官方故障自动禁止用户登陆，甩锅官方
    - 支持人机验证
    - 点击登录页Logo跳转管理面板,包含用户管理、token池管理、用量查询、token批量导出
+   - 支持替换Chat页面显示的头像/用户名/邮箱【新】
    <img width="500" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/3675a0bf-efd4-4cf3-a42b-4e96fab83bb2">
 
 # Worker 部署（一键直达）
@@ -105,4 +106,4 @@ at_2
  - 优化用量查询功能
  - 新增token导出功能，可导出所选号池的rt/at为txt文件
  - 支持反代始皇新彩蛋：voice服务
- - 支持替换Chat页面头像/用户名/邮箱
+ - 支持替换Chat页面显示的头像/用户名/邮箱
