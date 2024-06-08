@@ -16,6 +16,8 @@
    - 点击登录页Logo跳转管理面板,包含用户管理、token池管理、用量查询、token批量导出
    - 支持替换Chat页面显示的头像/用户名/邮箱【新】
    <img width="500" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/3675a0bf-efd4-4cf3-a42b-4e96fab83bb2">
+   <img width="200" alt="image" src="https://github.com/jyx04/oaifree-helper/assets/166741903/d2cc9a8f-598f-4249-8aa3-4710a3e2ab06">
+
 
 # Worker 部署（一键直达）
    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jyx04/oaifree_helper)
