@@ -63,8 +63,6 @@ async function getOAuthLink(shareToken, proxiedDomain) {
 }
 
 async function usermatch(userName, usertype) {
-    
-  // @ts-ignore
   const typeUsers = await KV.get(usertype) ||'';
   const typeUsersArray = typeUsers.split(","); // 将返回的用户类型字符串分割成数组
   return typeUsersArray.includes(userName); // 检查用户名是否在类型用户数组中
@@ -72,7 +70,7 @@ async function usermatch(userName, usertype) {
 
 async function getShareToken(userName, accessToken,accountNumber) {
   const url = 'https://chat.oaifree.com/token/register';
- /*  // @ts-ignore
+ /*  
    const tokenPrefix = await KV.get('token_prefix');
   const baseUserName = tokenPrefix + userName.replace(/_\d+$/, ''); // 移除用户名后的编号
   */
@@ -161,7 +159,11 @@ if (url.pathname === '/auth/login_auth0') {
 
   // Forward other requests to new.oaifree.com
   url.host = 'new.oaifree.com';
-  const response = await fetch(new Request(url, request));
+  const modifiedRequest = new Request(url, request);
+  if(voiceURL){
+  modifiedRequest.headers.set('X-Voice-Base', `${voiceURL}`);
+  }
+  const response = await fetch(modifiedRequest);
   
   // Special case for /backend-api/conversations
   if (url.pathname === '/backend-api/conversations') {
@@ -197,8 +199,8 @@ async function handleLogin(userName, initialaccountNumber, turnstileResponse, an
   }
   const GPTState = await getGPTStatus();
   const status = await KV.get('Status');
-  if ((GPTState !== 'operational')&&(!status)){
-    await loginlog(userName, 'Bad_OAI_Status','Error');
+  if ((GPTState == 'major_performance')&&(!status)){
+  await loginlog(userName, 'Bad_OAIStatus','Error');
   return generateErrorResponse(`OpenAI service is under maintenance.<br>Official status: ${GPTState} <br>More details: https://status.openai.com`);
 }
 
@@ -248,15 +250,11 @@ async function handleLogin(userName, initialaccountNumber, turnstileResponse, an
     let accountNumber = '';
    // let suffix = '';
        
-   // @ts-ignore
+  
     //const freeforcecar = await KV.get("FreeForceAN");
-     // @ts-ignore
      const defaultusers = await KV.get("Users");
-     // @ts-ignore
      const vipusers = await KV.get("VIPUsers");
-     // @ts-ignore
      const freeusers = await KV.get("FreeUsers");
-     // @ts-ignore
      const admin = await KV.get("Admin");
   
      // 合并所有用户
@@ -292,23 +290,22 @@ async function handleLogin(userName, initialaccountNumber, turnstileResponse, an
     }
     const refreshTokenKey = `rt_${accountNumber}`;
     const accessTokenKey = `at_${accountNumber}`;
-    // @ts-ignore
     const accessToken = await KV.get(accessTokenKey);
 
     //使用佬友的sharetoken
-    if (accessToken.startsWith('fk-')) {
-        // @ts-ignore
+    if (accessToken){
+     if (accessToken.startsWith('fk-')) {
         const fkDomain = await KV.get('FKDomain') ||proxiedDomain;
         //return Response.redirect(await getOAuthLink(accessToken, fkDomain), 302);
         return Response.redirect(`https://${fkDomain}/auth/login_share?token=${accessToken}`)
-      }
+       }
+    }
 
     if (isTokenExpired(accessToken)) {
          // 给没有refresh token的萌新用（比如我），取消下面这行注释即可享用
         // return generateErrorResponse('The current access token has not been updated.',accountNumber);
          // 如果 Token 过期，执行获取新 Token 的逻辑
          const url = 'https://token.oaifree.com/api/auth/refresh';
-        // @ts-ignore
         const refreshToken = await KV.get(refreshTokenKey);
         if (refreshToken) {
   
@@ -325,10 +322,8 @@ async function handleLogin(userName, initialaccountNumber, turnstileResponse, an
         if (response.ok) {
             const data = await response.json();
             const newAccessToken = data.access_token;
-            // @ts-ignore
             await KV.put(accessTokenKey, newAccessToken);
         } else {
-            // @ts-ignore
             await KV.put(accessTokenKey, "Bad_RT");
             return generateErrorResponse(`Error fetching access token.`,accountNumber);
         }
@@ -337,12 +332,10 @@ async function handleLogin(userName, initialaccountNumber, turnstileResponse, an
         return generateErrorResponse('The current access token has not been updated.',accountNumber);
     }
     }   
-        // @ts-ignore
         const finalaccessToken = await KV.get(accessTokenKey);
     const shareToken = await getShareToken(fullUserName, finalaccessToken,accountNumber);
   
     if (shareToken === 'Can not get share token.') {
-         // @ts-ignore
         //await KV.put(accessTokenKey, "Bad_AT");
         return generateErrorResponse(`Error fetching share token.`,accountNumber);
     }
@@ -356,7 +349,6 @@ async function handleLogin(userName, initialaccountNumber, turnstileResponse, an
 
 async function verifyTurnstile(responseToken) {
   const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-  // @ts-ignore
   const secretKey = await KV.get('TurnstileKeys');
   const response = await fetch(verifyUrl, {
     method: 'POST',
@@ -381,14 +373,12 @@ async function loginlog(userName, accountNumber, antype) {
         timestamp: timestamp
     };
     // Retrieve the existing log array or create a new one if it doesn't exist
-    // @ts-ignore
     const lastLoginLogs = await KV.get(`${antype}LoginLogs`);
     let logArray = [];
     if (lastLoginLogs) {
         logArray = JSON.parse(lastLoginLogs);
     }
     logArray.push(logEntry);
-    // @ts-ignore
     await KV.put(`${antype}LoginLogs`, JSON.stringify(logArray));
   }
   
@@ -400,14 +390,12 @@ async function loginlog(userName, accountNumber, antype) {
         accountNumber: accountNumber
     };
     // Retrieve the existing log array or create a new one if it doesn't exist
-    // @ts-ignore
     const lastDeleteLogs = await KV.get(`${antype}DeleteLogs`);
     let logArray = [];
     if (lastDeleteLogs) {
         logArray = JSON.parse(lastDeleteLogs);
     }
     logArray.push(logEntry);
-    // @ts-ignore
     await KV.put(`${antype}DeleteLogs`, JSON.stringify(logArray));
   }
 
@@ -430,11 +418,9 @@ async function loginlog(userName, accountNumber, antype) {
           });
           if (recentLogins.length >= 1 && anissues) {
             // 删除问题账号
-            // @ts-ignore
             const aliveAccount = await KV.get(`${antype}AliveAccounts`);
             let aliveAccountList = aliveAccount.split(',');
             aliveAccountList = aliveAccountList.filter(acc => acc !== accountNumber.toString());
-            // @ts-ignore
             await KV.put(`${antype}AliveAccounts`, aliveAccountList.join(','));
             await deletelog(userName, accountNumber,antype);
             return true;
@@ -473,7 +459,6 @@ async function loginlog(userName, accountNumber, antype) {
     // 随机读取
     if (mode == 'Random') {
       // Retrieve the last login logs
-      // @ts-ignore
       const lastLoginLogs = await KV.get(`${antype}LoginLogs`);
       if (lastLoginLogs) {
         const logArray = JSON.parse(lastLoginLogs);
@@ -486,7 +471,6 @@ async function loginlog(userName, accountNumber, antype) {
         if (recentLogins.length > 0) {
           const lastAccount = recentLogins[recentLogins.length - 1].accountNumber;
           if (await checkAndRemoveIssueAccount(lastAccount)) {
-            // @ts-ignore
             const aliveAccountString = await KV.get(`${antype}AliveAccounts`) || '';
             const aliveAccounts = aliveAccountString
               .split(',')
@@ -504,7 +488,6 @@ async function loginlog(userName, accountNumber, antype) {
       }
   
 
-      // @ts-ignore
       const aliveAccountString = await KV.get(`${antype}AliveAccounts`) || '';
       let aliveAccounts = aliveAccountString
         .split(',')
@@ -616,7 +599,6 @@ async function getGPTStatus(){
   }
   
   async function getHTMLSelectionPage() {
-    // @ts-ignore
     const aliveAccounts = await KV.get('FreeAliveAccounts') || '';
     const aliveAccountsArray = aliveAccounts.split(',').map(num => num.trim()).filter(num => num !== '');
     const websiteName = await KV.get('FreeWebName') || 'Haibara AI';
