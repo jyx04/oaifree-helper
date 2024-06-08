@@ -42,6 +42,7 @@
      
 ### 3. 环境变量
    - 以下是所有变量，全部无需手动填写，部署完项目后直接第一次进入可前端面板一键保存。
+   - 如需进行修改，位置在KV，而非worker的环境变量！
 ```
 Admin //管理员，用于管理面板的验证使用，且可看所有聊天记录【必填】
 TurnstileKeys //turnsile的密钥【必填】
@@ -78,7 +79,7 @@ at_2
 ```
 
 ### 4. 选车面板（可选）
-   - 通过文件`free_worker.js`部署worker，即可配置基于普号号池的选车上车界面。（一件部署已包含）
+   - 通过文件`free_worker.js`部署worker，即可配置基于普号号池的选车上车界面。（一键部署已包含）
    - 大部分变量同上，可以额外配置以下变量
      ```
      FreeWebName //选车上车页的站点名
@@ -87,13 +88,14 @@ at_2
      <img width="500" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/d44a5290-ae04-4be2-affb-26447e4b8050">
      
 ### 5. API接口（可选）
-   - 通过文件`api_worker.js`部署worker，即可配置基于plus号池的api服务。（一件部署已包含）
+   - 通过文件`api_worker.js`部署worker，即可配置基于plus号池的api服务。（一键部署已包含）
    - 本接口同样采用始皇的服务，使用plus号池内账号的token，随机调取，失效自动禁用
    - api地址请参考始皇的服务文档，api key为admin密码
 
 ### 6. 反代始皇的Voice服务（新增）
-   - 通过文件`voice_worker.js`部署voice服务的反代worker。（一件部署已包含）
+   - 通过文件`voice_worker.js`部署voice服务的反代worker。（一键部署已包含）
    - 需在系统KV配置变量`VoiceURL`为此worker的链接（无需https://）
+   - 点击镜像页中间的logo，优雅访问voice服务
 
 ### 7. 批量导出号池token功能（新增）
    - 见管理员面板的ExportTokens功能
