@@ -13,19 +13,20 @@
    - 支持禁用失效车次
    - 自动检测官方服务状态，如遇官方故障自动禁止用户登陆，甩锅官方
    - 支持人机验证
-   - 自带管理面板,包含用户管理、token池管理、用量查询，点击登录页Logo跳转
+   - 点击登录页Logo跳转管理面板,包含用户管理、token池管理、用量查询、token批量导出
    <img width="500" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/3675a0bf-efd4-4cf3-a42b-4e96fab83bb2">
 
 # Worker 部署（一键直达）
    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jyx04/oaifree_helper)
    - 配置完成后，请按照下方配置Turnstile人机验证服务教程，获得`站点密钥`和`密钥`
-   - 访问部署域名，再初始界面填写各项变量，完成部署！
+   - 访问部署域名，在初始界面一键保存各项变量，完成部署！
 # Worker 部署（手动版）
 ### 1. 配置Turnstile人机验证服务
    - 注册/登陆你的cloudflare，右上角可设置语言为中文。
    - 左侧找到`Turnstile`，选择`添加站点`
    - `站点名称`随意，`域`为：`workers.dev`或你自己的域名
    - 创建，记录好`站点密钥`和`密钥`，备用
+     
 ### 2. 部署 Cloudflare Worker：
    - 在左侧列表找到`Worker和Pages`
    - 选择`KV`，创建一个名为`oai_global_variables`的KV备用
@@ -34,9 +35,10 @@
    - 【可选】在worker的`设置`-`触发器`-`添加自定义域`绑定自己的域名
    - 回到本GitHub项目，复制`_worker.js`中的全部内容，在worker配置页面点击 `编辑代码`，清空原有内容粘贴后点右上角`部署`
    - 大功告成！
-   - 访问`自定义的域名`，或点击`部署`-`查看版本`,在初始面板一键保存各项环境变量（`Admin`保存后后该页面自动禁用，若需更改请至KV中调整）
+   - 访问`自定义的域名`，或点击`部署`-`查看版本`,在初始面板一键保存各项环境变量（初次保存后后该页面自动禁用，若需更改请至KV中调整）
+     
 ### 3. 环境变量
-   - 以下是所有变量，全部无需手动填写，部署完项目后直接第一次进入可前端面板一键储存。
+   - 以下是所有变量，全部无需手动填写，部署完项目后直接第一次进入可前端面板一键保存。
 ```
 Admin //管理员，用于管理面板的验证使用，且可看所有聊天记录【必填】
 TurnstileKeys //turnsile的密钥【必填】
@@ -68,15 +70,16 @@ at_1//（若已有rt，at可不填）
 at_2
 ……
 ```
-### 4. 选车面板（可选）
-<img width="500" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/d44a5290-ae04-4be2-affb-26447e4b8050">
 
+### 4. 选车面板（可选）
    - 通过文件`free_worker.js`部署worker，即可配置基于普号号池的选车上车界面。（一件部署已包含）
    - 大部分变量同上，可以额外配置以下变量
      ```
      FreeWebName //选车上车页的站点名
      FreeWebIntro //选车上车页的简介，可用html代码插入文本、超链接等
      ```
+     <img width="500" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/d44a5290-ae04-4be2-affb-26447e4b8050">
+     
 ### 5. API接口（可选）
    - 通过文件`api_worker.js`部署worker，即可配置基于plus号池的api服务。（一件部署已包含）
    - 本接口同样采用始皇的服务，使用plus号池内账号的token，随机调取，失效自动禁用
