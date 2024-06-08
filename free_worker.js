@@ -109,6 +109,7 @@ async function getShareToken(userName, accessToken,accountNumber) {
 
 async function handleRequest(request) {
     const url = new URL(request.url);
+    const voiceURL = await KV.get('VoiceURL');
   
 // Specific handling for /auth/login_auth0
 if (url.pathname === '/auth/login_auth0') {
