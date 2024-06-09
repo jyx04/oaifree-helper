@@ -534,7 +534,7 @@ async function addToAliveAccountList(accessToken, accountNumber) {
   const accountType = await checkAccountType(accessToken);
   const aliveAccountsKey = `${accountType}AliveAccounts`;
 
-  let aliveAccount = await KV.get(aliveAccountsKey);
+  let aliveAccount = await KV.get(aliveAccountsKey) || '';
   let aliveAccountList = aliveAccount ? aliveAccount.split(',') : [];
   if (!aliveAccountList.includes(accountNumber)) {
     aliveAccountList.push(accountNumber);
@@ -707,7 +707,7 @@ async function handleExportGetRequest(request) {
     const html = await getExportHTML();
     return new Response(html, { headers: { 'Content-Type': 'text/html' } });
   }
-  const adminusers = await KV.get('Admin');
+  const adminusers = await KV.get('Admin') || '';
   if (adminusers.split(',').includes(adminUserName)) {
   const validTokenTypes = ['rt', 'at'];
   const validAccountTypes = ['Free', 'Plus'];
@@ -724,7 +724,7 @@ async function exportToken(tokenType, accountType) {
   const accountTypeKey = `${accountType}AliveAccounts`;
 
   // 获取对应类型的账户列表
-  let aliveAccount = await KV.get(accountTypeKey);
+  let aliveAccount = await KV.get(accountTypeKey) || '';
   if (!aliveAccount) {
     return new Response('No accounts found', { status: 404 });
   }
@@ -929,7 +929,7 @@ async function handleAdminPostRequest(request) {
   }
 
   // Get adminusers list
-  const adminusers = await KV.get('Admin');
+  const adminusers = await KV.get('Admin') || '';
   if (!adminusers || !adminusers.split(',').includes(adminuserName)) {
     return generateAdminResponse('Unauthorized');
   }
@@ -1179,7 +1179,7 @@ async function handleUserPostRequest(request) {
   }
 
   // Get adminusers list
-  const adminusers = await KV.get('Admin');
+  const adminusers = await KV.get('Admin') || '';
   if (!adminusers || !adminusers.split(',').includes(adminuserName)) {
     return generateUserResponse('Unauthorized');
   }
@@ -1515,7 +1515,7 @@ async function handleRegisterPostRequest(request) {
   }
 
   const autoDeleteCDK = await KV.get('AutoDeleteCDK')
-  const cdkeyStore = await KV.get('CDKEY')
+  const cdkeyStore = await KV.get('CDKEY') || '';
   const cdkeyList = cdkeyStore ? cdkeyStore.split(',') : []
 
   if (!cdkeyList.includes(cdkey)) {
@@ -2703,10 +2703,10 @@ if (userName.startsWith('fk-')) {
  let foundSuffix = false;
  let suffix = '';
  const forcean = await KV.get("ForceAN");
-  const defaultusers = await KV.get("Users");
-  const vipusers = await KV.get("VIPUsers");
-  const freeusers = await KV.get("FreeUsers");
-  const admin = await KV.get("Admin");
+  const defaultusers = await KV.get("Users")|| '';
+  const vipusers = await KV.get("VIPUsers")|| '';
+  const freeusers = await KV.get("FreeUsers")|| '';
+  const admin = await KV.get("Admin")|| '';
   // 合并所有用户
   const users = `${defaultusers},${vipusers},${freeusers},${admin}`;
 
