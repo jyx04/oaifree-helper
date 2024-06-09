@@ -47,12 +47,12 @@ jobs:
         id: create_or_find_kv
         run: |
           echo "Listing KV namespaces"
-          namespace_output=$(wrangler kv:namespace list)
+          namespace_output=$(wrangler kv namespace list)
           echo "Namespace list output: $namespace_output"
           existing_namespace_id=$(echo "$namespace_output" | jq -r '.[] | select(.title == "oaifreehelper-oai_global_variables_preview" or .title == "worker-oai_global_variables_preview" or .title == "oai_global_variables") | .id' | head -n 1)
           if [ -z "$existing_namespace_id" ]; then
             echo "No existing KV namespace found, creating a new one."
-            namespace_creation_output=$(wrangler kv:namespace create "oai_global_variables" --preview) || exit 1
+            namespace_creation_output=$(wrangler kv namespace create "oai_global_variables" --preview) || exit 1
             echo "Namespace creation output: $namespace_creation_output"
             namespace_id=$(echo "$namespace_creation_output" | grep -oP '(?<=preview_id = ")[^"]+')
             echo "CF_KV_NAMESPACE_ID=$namespace_id" >> $GITHUB_ENV
