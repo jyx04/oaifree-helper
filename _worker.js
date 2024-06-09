@@ -226,26 +226,26 @@ async function handleInitialPostRequest(request) {
   ];
 
   for (const field of fields) {
-    let value = formData.get(field);
-    if (field === 'WorkerURL' && !value) {
-      value = (new URL(request.url)).hostname;
-      await KV.put(field, value);
+        let value = formData.get(field);
+        if (value) { // 确保字段有值再保存
+            if (field === 'WorkerURL' && !value) {
+                value = (new URL(request.url)).hostname;
+            }
+            if (field === 'VoiceURL' && !value) {
+                let hostname = (new URL(request.url)).hostname;
+                let parts = hostname.split('.');
+                parts[0] = 'voice';
+                value = parts.join('.');
+            }
+            if (field === 'FreeURL' && !value) {
+                let hostname = (new URL(request.url)).hostname;
+                let parts = hostname.split('.');
+                parts[0] = 'free';
+                value = parts.join('.');
+            }
+            await KV.put(field, value); // 保存到KV存储
+        }
     }
-    if (field === 'VoiceURL' && !value) {
-      let hostname = (new URL(request.url)).hostname;
-      let parts = hostname.split('.');
-      parts[0] = 'voice';
-      value = parts.join('.');
-      await KV.put(field, value);
-    }
-    if (field === 'FreeURL' && !value) {
-      let hostname = (new URL(request.url)).hostname;
-      let parts = hostname.split('.');
-      parts[0] = 'free';
-      value = parts.join('.');
-      await KV.put(field, value);
-    }
-  }
 
   return new Response('Parameters updated successfully', { status: 200 });
 }
