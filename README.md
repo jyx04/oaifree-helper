@@ -85,6 +85,7 @@ at_2
    - 通过文件`free_worker.js`部署worker，即可配置基于普号号池的选车上车界面。（一键部署已包含）
    - 大部分变量同上，可以额外配置以下变量
      ```
+     FreeURL //单独的URL
      FreeWebName //选车上车页的站点名
      FreeWebIntro //选车上车页的简介，可用html代码插入文本、超链接等
      ```
