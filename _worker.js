@@ -51,7 +51,7 @@ async function verifyTurnstile(responseToken) {
   return data.success;
 }
 async function usermatch(userName, usertype) {
-  const typeUsers = await KV.get(usertype)  || ''; ;
+  const typeUsers = await KV.get(usertype)  || '';
   const typeUsersArray = typeUsers.split(","); // 将返回的用户类型字符串分割成数组
   return typeUsersArray.includes(userName); // 检查用户名是否在类型用户数组中
 }
@@ -1145,10 +1145,10 @@ async function handleUserPostRequest(request) {
 
   const userRegex = new RegExp(`^${newUsers}_(\\d+)$`);
     let fullUserName = newUsers; 
-     const defaultusers = await KV.get("Users");
-     const vipusers = await KV.get("VIPUsers");
-     const freeusers = await KV.get("FreeUsers");
-     const admin = await KV.get("Admin");
+     const defaultusers = await KV.get("Users")|| '';
+     const vipusers = await KV.get("VIPUsers")|| '';
+     const freeusers = await KV.get("FreeUsers")|| '';
+     const admin = await KV.get("Admin")|| '';
      // 合并所有用户
      const users = `${defaultusers},${vipusers},${freeusers},${admin}`;
     // 自动查找匹配的用户名格式abc_xxx，并添加后缀
