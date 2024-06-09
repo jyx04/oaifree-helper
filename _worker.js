@@ -230,14 +230,13 @@ async function handleInitialPostRequest(request) {
     let value = formData.get(field);
     if (field === 'WorkerURL' && !value) {
       value = (new URL(request.url)).hostname;
+      await KV.put(field, value);
     }
     if (field === 'VoiceURL' && !value) {
       let hostname = (new URL(request.url)).hostname;
       let parts = hostname.split('.');
       parts[0] = 'voice';
       value = parts.join('.');
-    }
-    if (value) {
       await KV.put(field, value);
     }
   }
