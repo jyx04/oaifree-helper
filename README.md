@@ -53,8 +53,8 @@ TurnstileKeys //turnsile的密钥【必填】
 TurnstileSiteKey //站点密钥【必填】
 WebName //站点名称
 WorkerURL //站点域名，无需https://若无自己的域名，则为worker默认域名：[worker名].[用户名].workers.dev
-LogoURL //图片地址，需https://
-ChatLogoURL //chat界面显示的用户头像地址，需https://
+LogoURL //图片地址，需https://，若无图床可填图片本地base64编码，不宜过大
+ChatLogoURL //chat界面显示的用户头像地址，需https://，若无图床可填图片本地base64编码，不宜过大
 ChatUesrName //chat界面显示的用户名
 ChatMail //chat界面显示的用户邮箱
 
@@ -73,6 +73,7 @@ FKDomain //把sharetoken当at用时，走的默认域名
 Status //服务状态，若为非空，无视openai官方故障通告，始终允许登陆
 TemporaryAN //强制启用临时聊天的车牌，以1,2,3格式
 
+//以下在管理员面板添加更方便
 PlusAliveAccounts //plus号池存活序号，以1,2,3格式
 FreeAliveAccounts //普号存活序号，以1,2,3格式
 rt_1
@@ -142,8 +143,8 @@ at_2
      ```
      WebName //站点名称
      WorkerURL //站点域名，无需https://若无自己的域名，贼为worker默认域名：[worker名].[用户名].workers.dev【必填】
-     LogoURL //图片地址，需https://
-     ChatLogoURL //chat界面显示的用户头像地址，需https://
+     LogoURL //图片地址，需https://，若无图床可填图片本地base64编码，不宜过大
+     ChatLogoURL //chat界面显示的用户头像地址，需https://，若无图床可填图片本地base64编码，不宜过大
      ChatUesrName //chat界面显示的用户名
      ChatMail //chat界面显示的用户邮箱
      FreeWebName //选车上车页的站点名
