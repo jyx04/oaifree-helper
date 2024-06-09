@@ -4,7 +4,7 @@
 ### [体验站](https://oaifreehelper.haibara-ai.workers.dev) 密码linux.do,无有效功能
 ### 主要功能
    - 原理是储存`refreshtoken`和`accesstoken`，并调用始皇的各项接口获取`sharetoken`一键直达始皇的new.oaifree.com镜像站
-   - 用户使用唯一用户名登陆即可后台自动分配·sharetoken·，自带始皇的聊天隔离功能。包含简易的用户体系，储存各类用户，设置各类用户的限额和限制
+   - 用户使用唯一用户名登陆即可后台自动分配`sharetoken`，自带始皇的聊天隔离功能。包含简易的用户体系，储存各类用户，设置各类用户的限额和限制
    - 支持使用/?un=xxx的直链登陆，分享更省心。
    - 自带注册功能，分享激活码给朋友，不用总手动录入用户
    - 支持组建token池，可前端面板储存token，支持自动判断rt/at，自动解析json
@@ -26,7 +26,8 @@
    - 一键为全家桶，包含主服务/选车面板服务/API服务/反代voice服务，且无需手动关联KV，即点即用
    - 配置完成后，请按照下方Turnstile人机验证服务教程，获得`站点密钥`和`密钥`
    - 访问部署域名，在初始界面一键保存各项变量，完成部署！
-# Worker 部署（手动版）
+   - 添加token：在登陆页点击logo，选择Token Management进入token管理面板添加
+# Worker 部署（手动部署）
 ### 1. 配置Turnstile人机验证服务（不可跳过）
    - 注册/登陆你的cloudflare，右上角可设置语言为中文。
    - 左侧找到`Turnstile`，选择`添加站点`
@@ -53,9 +54,9 @@ TurnstileSiteKey //站点密钥【必填】
 WebName //站点名称
 WorkerURL //站点域名，无需https://若无自己的域名，贼为worker默认域名：[worker名].[用户名].workers.dev【必填】
 LogoURL //图片地址，需https://
-ChatLogoURL //chat界面用户头像地址，需https://
-ChatUesrName //chat界面用户名
-ChatMail //chat界面用户邮箱
+ChatLogoURL //chat界面显示的用户头像地址，需https://
+ChatUesrName //chat界面显示的用户名
+ChatMail //chat界面显示的用户邮箱
 
 Users //默认用户，以aaa,bbb,ccc形式填写，能访问所有车牌
 VIPUsers //vip用户，即私车用户，无速率和时间限制
@@ -104,13 +105,55 @@ at_2
    - 需在系统KV配置变量`VoiceURL`为此worker的链接（无需https://）
    - 点击镜像页中间的logo，优雅访问voice服务
 
-### 7. 批量导出号池token功能（新增）
+# 使用教程
+### 1. 管理面板
+   - 配置完成后，点击登录页面的logo，可进入管理面板
+
+### 2. Token管理
+   - 见管理员面板的Token Management功能
+   - 获取token：可通过始皇的服务获取普号或Plus号的rt/at（需linux.do高级用户）。也可自行通过网页获取at（自行查询教程）
+   - 添加token：可批量输入 rt/at，以','分割，支持自动识别token类型。也可粘贴单个token的完整json，自动提取添加。添加的token将自动识别普号/plus，将序号加入对应的AliveAccountLists索引。随token添加的user为跟车用户，自动绑定车号，若设置ForceAN则强制以该车号登录。
+   - 更新token：若存有rt，at过期将自动刷新。若无rt，将在登陆页提醒at过期
+   - 禁用token：AliveAccountLists存有所有有效token的序号。通过账号登录页面可报告账号问题，删除序号。也可通过API调用，自动删除失效token的序号。
+
+### 3. 批量导出号池token功能（新增）
    - 见管理员面板的ExportTokens功能
    - 可选导出Plus/Free号池
    - 可选生成导出链接or直接下载txt文件
    - txt文件格式为每行一个token，便于挪至其他服务使用
-     
 
+### 4. 用户和车次管理
+   - 见管理员面板的User Management功能
+   - 用户添加：VIPUser的有效期最长，无用量限制；User为普通用户；FreeUser为受限用户。
+   - 用户车号选择：`SetAN`不填则用户手动选，序号则所有用户以该序号登录，True则由系统选。
+   - 系统车号选择：当`SetAN`为True，可在`PlusMode`填入Random或Order，应用VIPUSer和FreeUser的自动选车模式。在`FreeMode`填入Random/Order或Plus，应用FreeUser的自动选车模式。Random为随机，Order为顺序，Plus为使用Plus号池和模式。
+     
+### 5. 用户注册
+   - `CDKEY`内存有效激活码，`AutoDeleteCDK`非空则激活码只能使用一次，否则用后自动删除
+     
+### 6. 用量查询
+   - 见管理员面板的Query User Usage功能
+   - 若输入管理员账号，可分别查询用户和免费用户的用量，可储存和为用户名打码
+   - 若输入非管理员账号，则查询当前用户用量
+
+### 7. 个性化和杂项
+   - 参考以下环境变量
+     ```
+     WebName //站点名称
+     WorkerURL //站点域名，无需https://若无自己的域名，贼为worker默认域名：[worker名].[用户名].workers.dev【必填】
+     LogoURL //图片地址，需https://
+     ChatLogoURL //chat界面显示的用户头像地址，需https://
+     ChatUesrName //chat界面显示的用户名
+     ChatMail //chat界面显示的用户邮箱
+     FreeWebName //选车上车页的站点名
+     FreeWebIntro //选车上车页的简介，可用html代码插入文本、超链接等
+     ```
+   - 如需修改用户的默认用量限制等，请修改worker的`getShareToken`函数，内有详细注释
+
+### 8. Bug反馈和功能建议
+   - 请在Github提交issues。故障反馈需包含log
+
+     
 # 日志
  - 建立GitHub项目
  - 创建一键部署，新增选车界面和api服务
