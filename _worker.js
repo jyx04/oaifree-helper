@@ -2104,7 +2104,7 @@ async function handleUsageRequest(request) {
         const htmlResponse = await generateTableHTML(usersData, queryType);
         return new Response(htmlResponse, { headers: { 'Content-Type': 'text/html' } });
       } else {
-        const accountNumber = await getTableToCheckAccountNumber(adminUsername);
+        const accountNumber = await getTableToCheckAccountNumber(adminUsername, queryType);
         const accessToken = await KV.get(`at_${accountNumber}`) || '1';
         const shareToken = await getToCheckShareToken(adminUsername,accessToken);
         const queryLimit = await handleQueryRequest(accessToken,shareToken);
@@ -2131,7 +2131,7 @@ async function processBatchUsers(users, queryType) {
 }
 
 async function processSingleUser(user, queryType) {
-  const accountNumber = await getTableToCheckAccountNumber(user);
+  const accountNumber = await getTableToCheckAccountNumber(user, queryType);
   const accessToken = await KV.get(`at_${accountNumber}`) || '1';
   const shareToken = await getToCheckShareToken(user, accessToken);
   const usage = await queryLimits(accessToken, shareToken);
@@ -2153,10 +2153,9 @@ function parseUsage(usage) {
   };
 }
 
-async function getTableToCheckAccountNumber(userName) {
-  const logs = ['FreeLoginLogs', 'PlusLoginLogs'];
-  for (const log of logs) {
-    const lastLoginLogs = await KV.get(log);
+async function getTableToCheckAccountNumber(userName, queryType) {
+  const logs = queryType === 'plus' ? ['PlusLoginLogs'] : ['FreeLoginLogs'];
+    const lastLoginLogs = await KV.get(logs);
     if (lastLoginLogs) {
       const logArray = JSON.parse(lastLoginLogs);
       const userLogs = logArray.filter(log => log.user === userName);
@@ -2165,7 +2164,6 @@ async function getTableToCheckAccountNumber(userName) {
         return lastAccount;
       }
     }
-  }
   return 'Unknown';
 }
 
