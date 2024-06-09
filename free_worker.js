@@ -230,7 +230,7 @@ addEventListener('fetch', event => {
   
   
   
-      const proxiedDomain = await KV.get('FreeURL') || awit KV.get('WorkerURL');//修改为反代new站的地址
+      const proxiedDomain = await KV.get('FreeURL') || await KV.get('WorkerURL');//修改为反代new站的地址
      /*
       try {
           const tokenData = JSON.parse(userName);
