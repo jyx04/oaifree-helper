@@ -64,6 +64,17 @@ async function handleRequest(request) {
   const chatlogourl = await KV.get('ChatLogoURL') || await KV.get('LogoURL') || logo;
   const chatusername = await KV.get('ChatUserName') || 'Haibara AI';
   const chatmail = await KV.get('ChatMail') || 'Power by Pandora';
+   const cookies = request.headers.get('Cookie');
+  let aian = '';
+if (cookies) {
+  const cookiesArray = cookies.split(';');
+  for (const cookie of cookiesArray) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'aian') {
+      aian = value;
+    } 
+  }
+}
   
   //处理直链登陆形式
   const params = new URLSearchParams(url.search);
@@ -181,7 +192,7 @@ async function handleRequest(request) {
    const data = await response.json();
    data.picture = `${chatlogourl}`;
    data.email = `${chatmail}`;
-   data.name = `${chatusername}`;
+   data.name = `${chatusername} [${aian}]`;
    return new Response(JSON.stringify(data), {
      status: response.status,
      headers: response.headers
@@ -189,8 +200,8 @@ async function handleRequest(request) {
  }
  if (url.pathname === '/backend-api/gizmo_creator_profile') {
    const data = await response.json();
-   data.name = `${chatusername}`;
-   data.display_name = `${chatusername}`;
+   data.name = `${chatusername} [${aian}]`;
+   data.display_name = `${chatusername} [${aian}]`;
    return new Response(JSON.stringify(data), {
      status: response.status,
      headers: response.headers
@@ -2834,7 +2845,19 @@ accountNumber = await getAccountNumber(fullUserName,initialaccountNumber, antype
   // Log the successful login
   await loginlog(fullUserName, accountNumber, antype);
 
- return Response.redirect(await getOAuthLink(shareToken, proxiedDomain), 302);
+  const oauthLink = await getOAuthLink(shareToken, proxiedDomain);
+       //const passwd = await generatePassword(userName);
+       const headers = new Headers();
+     headers.append('Location', oauthLink);
+     //headers.append('Set-Cookie', `aina=${passwd}; Path=/`);
+     headers.append('Set-Cookie', `aian=${accountNumber}; Path=/`);
+     
+     
+       const response = new Response(null, {
+           status: 302,
+           headers: headers
+       });
+       return response;
 }
 
 async function loginlog(userName, accountNumber, antype) {
