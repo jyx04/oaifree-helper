@@ -122,7 +122,7 @@ at_2
    - 见管理员面板的User Management功能
    - 用户添加：VIPUser的有效期最长，无用量限制；User为普通用户；FreeUser为受限用户。
    - 用户车号选择：`SetAN`不填则用户手动选，序号则所有用户以该序号登录，True则由系统选。
-   - 系统车号选择：当`SetAN`为True，可在`PlusMode`填入Random或Order，应用VIPUSer和FreeUser的自动选车模式。在`FreeMode`填入Random/Order或Plus，应用FreeUser的自动选车模式。Random为随机，Order为顺序，Plus为使用Plus号池和模式。
+   - 系统车号选择：当`SetAN`为True，可在`PlusMode`填入Random或Order，应用VIPUSer和User的自动选车模式。在`FreeMode`填入Random/Order或Plus，应用FreeUser的自动选车模式。Random为随机，Order为顺序，Plus为使用Plus号池和模式。
      
 ### 5. 用户注册
    - `CDKEY`内存有效激活码，`AutoDeleteCDK`非空则激活码只能使用一次，否则用后自动删除
