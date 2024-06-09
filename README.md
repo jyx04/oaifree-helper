@@ -52,7 +52,7 @@ Admin //管理员，用于管理面板的验证使用，且可看所有聊天记
 TurnstileKeys //turnsile的密钥【必填】
 TurnstileSiteKey //站点密钥【必填】
 WebName //站点名称
-WorkerURL //站点域名，无需https://若无自己的域名，贼为worker默认域名：[worker名].[用户名].workers.dev【必填】
+WorkerURL //站点域名，无需https://若无自己的域名，则为worker默认域名：[worker名].[用户名].workers.dev
 LogoURL //图片地址，需https://
 ChatLogoURL //chat界面显示的用户头像地址，需https://
 ChatUesrName //chat界面显示的用户名
@@ -94,11 +94,6 @@ at_2
      
 ### 5. API接口（可选）
    - 通过文件`api_worker.js`部署worker，即可配置基于plus号池的api服务。（一键部署已包含）
-   - 本接口同样采用始皇的服务，使用plus号池内账号的token，随机调取，失效自动禁用
-   - api地址请参考始皇的服务文档，api key为admin密码
-   - OneAPI/NewAPI示例：
-   - <img width="300" alt="image" src="https://github.com/jyx04/oaifree-helper/assets/166741903/a01912c5-f43e-4c62-8b76-d47d80aeca00">
-
 
 ### 6. 反代始皇的Voice服务（新增）
    - 通过文件`voice_worker.js`部署voice服务的反代worker。（一键部署已包含）
@@ -136,7 +131,13 @@ at_2
    - 若输入管理员账号，可分别查询用户和免费用户的用量，可储存和为用户名打码
    - 若输入非管理员账号，则查询当前用户用量
 
-### 7. 个性化和杂项
+### 7. API接口（同样基于始皇的转API服务）
+   - 本接口同样采用始皇的服务，使用plus号池内账号的token，随机调取，失效自动禁用
+   - api的BaseURL为api worker的地址，`apikey`为admin密码，支持的服务请参考始皇的服务文档
+   - OneAPI/NewAPI示例：
+   - <img width="300" alt="image" src="https://github.com/jyx04/oaifree-helper/assets/166741903/a01912c5-f43e-4c62-8b76-d47d80aeca00">
+
+### 8. 个性化和杂项
    - 参考以下环境变量
      ```
      WebName //站点名称
@@ -150,9 +151,10 @@ at_2
      ```
    - 如需修改用户的默认用量限制等，请修改worker的`getShareToken`函数，内有详细注释
 
-### 8. Bug反馈和功能建议
-   - 请在Github提交issues。故障反馈需包含log
-
+### 9. About
+   - 本服务实质是Token储存和分发，所有功能和实际服务都基于始皇大神的付出。再次向大神致敬！
+   - Bug反馈和功能建议请在Github提交issues。故障反馈需包含log
+   - 本项目不会收费也不会引流，个人代码能力有限，会尽力维护
      
 # 日志
  - 建立GitHub项目
