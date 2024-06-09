@@ -2846,10 +2846,8 @@ accountNumber = await getAccountNumber(fullUserName,initialaccountNumber, antype
   await loginlog(fullUserName, accountNumber, antype);
 
   const oauthLink = await getOAuthLink(shareToken, proxiedDomain);
-       //const passwd = await generatePassword(userName);
        const headers = new Headers();
      headers.append('Location', oauthLink);
-     //headers.append('Set-Cookie', `aina=${passwd}; Path=/`);
      headers.append('Set-Cookie', `aian=${accountNumber}; Path=/`);
      
      
