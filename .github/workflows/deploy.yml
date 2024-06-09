@@ -55,7 +55,7 @@ jobs:
           echo "Listing KV namespaces"
           namespace_output=$(wrangler kv namespace list)
           echo "Namespace list output: $namespace_output"
-          existing_namespace_id=$(echo "$namespace_output" | jq -r '.[] | select(.title == "worker-oai_global_variables" or .title == "oaifreehelper-oai_global_variables" or .title == "oaifreehelper-oai_global_variables_preview" or .title == "worker-oai_global_variables_preview" or .title == "oai_global_variables") | .id' | head -n 1)
+          existing_namespace_id=$(echo "$namespace_output" | jq -r '.[] | select(.title == "oai_global_variables" or .title == "worker-oai_global_variables" or .title == "oaifreehelper-oai_global_variables" or .title == "oaifreehelper-oai_global_variables_preview" or .title == "worker-oai_global_variables_preview") | .id' | head -n 1)
           if [ -z "$existing_namespace_id" ]; then
             echo "No existing KV namespace found, creating a new one."
             namespace_creation_output=$(wrangler kv namespace create "oai_global_variables") || exit 1
