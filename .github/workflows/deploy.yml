@@ -37,29 +37,36 @@ jobs:
 
       - name: Install Wrangler
         run: npm install -g wrangler
-
+        
       - name: Set Cloudflare Environment Variables
         run: |
           echo "CLOUDFLARE_ACCOUNT_ID=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" >> $GITHUB_ENV
           echo "CLOUDFLARE_API_TOKEN=${{ secrets.CLOUDFLARE_API_TOKEN }}" >> $GITHUB_ENV
 
+      - name: Validate Cloudflare Credentials
+        run: |
+          curl -X GET "https://api.cloudflare.com/client/v4/accounts" \
+               -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+               -H "Content-Type: application/json"
+               
       - name: Create or Use Existing KV Namespace
         id: create_or_find_kv
         run: |
           echo "Listing KV namespaces"
           namespace_output=$(wrangler kv namespace list)
           echo "Namespace list output: $namespace_output"
-          existing_namespace_id=$(echo "$namespace_output" | jq -r '.[] | select(.title == "oaifreehelper-oai_global_variables_preview" or .title == "worker-oai_global_variables_preview" or .title == "oai_global_variables") | .id' | head -n 1)
+          existing_namespace_id=$(echo "$namespace_output" | jq -r '.[] | select(.title == "worker-oai_global_variables" or .title == "oaifreehelper-oai_global_variables" or .title == "oaifreehelper-oai_global_variables_preview" or .title == "worker-oai_global_variables_preview" or .title == "oai_global_variables1") | .id' | head -n 1)
           if [ -z "$existing_namespace_id" ]; then
             echo "No existing KV namespace found, creating a new one."
-            namespace_creation_output=$(wrangler kv namespace create "oai_global_variables" --preview) || exit 1
+            namespace_creation_output=$(wrangler kv namespace create "oai_global_variables") || exit 1
             echo "Namespace creation output: $namespace_creation_output"
-            namespace_id=$(echo "$namespace_creation_output" | grep -oP '(?<=preview_id = ")[^"]+')
+            namespace_id=$(echo "$namespace_creation_output" | grep -oP '(?<=id = ")[^"]+')
             echo "CF_KV_NAMESPACE_ID=$namespace_id" >> $GITHUB_ENV
           else
             echo "Found existing KV namespace with ID: $existing_namespace_id"
             echo "CF_KV_NAMESPACE_ID=$existing_namespace_id" >> $GITHUB_ENV
           fi
+
 
       - name: Generate wrangler.toml for main worker
         run: |
