@@ -1268,7 +1268,7 @@ if (cookies) {
                 </header>
                 <main class="main-container">
                     <section class="content-wrapper">
-                        <div class="title-wrapper"><h1 class="title">Haibara, AI</h1></div>
+                        <div class="title-wrapper"><h1 class="title">${websiteName}</h1></div>
                         <div class="login-container">
                             <form id="manageAccountForm0" action="/auth/login_auth0/login" method="POST">
                                 <div class="input-wrapper">
