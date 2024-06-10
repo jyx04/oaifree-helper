@@ -645,7 +645,7 @@ if (cookies) {
     async function getHTMLSelectionPage() {
       const aliveAccounts = await KV.get('FreeAliveAccounts') || '';
       const aliveAccountsArray = aliveAccounts.split(',').map(num => num.trim()).filter(num => num !== '');
-      const websiteName = await KV.get('FreeWebName') || 'Haibara AI';
+      const websiteName = await KV.get('FreeWebName') || await KV.get('WebName') || 'Haibara AI';
       const introContent = await KV.get('FreeWebIntro') || '';
   
       const options = await Promise.all(aliveAccountsArray.map(async (accountNumber) => {
@@ -884,7 +884,8 @@ if (cookies) {
     const logourl = await KV.get('LogoURL') || logo;
     const WorkerURL=await KV.get('WorkerURL');
     const turnstileSiteKey=await KV.get('TurnstileSiteKey');
-    const websiteName = await KV.get('WebName') || 'Haibara AI';return `
+    const websiteName = await KV.get('FreeWebName') || await KV.get('WebName') || 'Haibara AI';
+      return `
     <!DOCTYPE html>
     <html lang="en">
     <head>
