@@ -167,6 +167,7 @@ if (cookies) {
        }
      } */
      url.host = 'new.oaifree.com';
+     url.protocol = 'https';
      return fetch(new Request(url, request));
    }
   //Voice地址和其他
