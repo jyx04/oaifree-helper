@@ -172,10 +172,12 @@ if (cookies) {
         }
       } */
       url.host = 'new.oaifree.com';
+      url.protocol = 'https';
       return fetch(new Request(url, request));
     }
    //Voice地址和其他
   url.host = 'new.oaifree.com';
+  url.protocol = 'https';
   const modifiedRequest = new Request(url, request);
   if(voiceURL){
   modifiedRequest.headers.set('X-Voice-Base', `https://${voiceURL}`);
