@@ -24,11 +24,12 @@
 # Worker 部署（一键直达）
    [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jyx04/oaifree_helper)
    - 一键为全家桶，包含主服务/选车面板服务/API服务/反代voice服务，且无需手动关联KV，即点即用
-   - 配置完成后，请按照下方Turnstile人机验证服务教程，获得`站点密钥`和`密钥`
+   - 配置完成后，如需添加人机验证器防爆破，请按照下方Turnstile人机验证服务教程，获得`站点密钥`和`密钥`
    - 访问部署域名，在初始界面一键保存各项变量，完成部署！
    - 添加token：在登陆页点击logo，选择Token Management进入token管理面板添加
 # Worker 部署（手动部署）
-### 1. 配置Turnstile人机验证服务（不可跳过）
+### 1. 配置Turnstile人机验证服务（不建议跳过）
+   - 如需跳过，后期将`RemoveTurnstile`参数设置为1即可
    - 注册/登陆你的cloudflare，右上角可设置语言为中文。
    - 左侧找到`Turnstile`，选择`添加站点`
    - `站点名称`随意，`域`为：`workers.dev`或你自己的域名
@@ -50,7 +51,8 @@
 ```
 Admin //管理员，用于管理面板的验证使用，且可看所有聊天记录【必填】
 TurnstileKeys //turnsile的密钥【必填】
-TurnstileSiteKey //站点密钥【必填】
+TurnstileSiteKey //turnsile的密钥【必填】
+RemoveTurnstile//跳过turnsile人机验证。设置跳过，以上两参数随便填
 WebName //站点名称
 WorkerURL //站点域名，无需https://若无自己的域名，则为worker默认域名：[worker名].[用户名].workers.dev
 LogoURL //图片地址，需https://，若无图床可填图片本地base64编码，不宜过大
