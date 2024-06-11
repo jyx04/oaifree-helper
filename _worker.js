@@ -419,10 +419,11 @@ async function handlePlusPostRequest(request) {
   let jsonAccessToken, jsonRefreshToken;
   try {
     const tokenData = JSON.parse(refreshToken);
-    if (tokenData.access_token && tokenData.refresh_token) {
+    if (tokenData.access_token) {
       jsonAccessToken = tokenData.access_token;
+    } else if (tokenData.refresh_token) {
       jsonRefreshToken = tokenData.refresh_token;
-    } else if (tokenData.accessToken) {
+    }else if (tokenData.accessToken) {
       jsonAccessToken = tokenData.accessToken;
       jsonRefreshToken = '';
     }
