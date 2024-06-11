@@ -415,21 +415,6 @@ async function handlePlusPostRequest(request) {
     return generatePlusResponse('Unauthorized access.', adminuserName);
   }
 
-  // 处理 JSON 格式的 refreshToken
-  let jsonAccessToken, jsonRefreshToken;
-  try {
-    const tokenData = JSON.parse(refreshToken);
-    if (tokenData.access_token) {
-      jsonAccessToken = tokenData.access_token;
-    } else if (tokenData.refresh_token) {
-      jsonRefreshToken = tokenData.refresh_token;
-    }else if (tokenData.accessToken) {
-      jsonAccessToken = tokenData.accessToken;
-      jsonRefreshToken = '';
-    }
-  } catch (e) {
-    // 输入不是 JSON 格式
-  }
 
   // 更新跟车 users
   if (accountUsers) {
@@ -439,6 +424,36 @@ async function handlePlusPostRequest(request) {
     const updatedUsers = `${currentUsers},${newUsers}`;
     await KV.put('VIPUsers', updatedUsers);
   }
+
+  // 处理 JSON 格式的 refreshToken
+  let jsonAccessToken, jsonRefreshToken;
+  try {
+    const tokenData = JSON.parse(refreshToken);
+    const rtKey = `rt_${accountNumber}`;
+    const atKey = `at_${accountNumber}`;
+    if (tokenData.access_token) {
+      jsonAccessToken = tokenData.access_token;
+      jsonRefreshToken = tokenData.refresh_token ||'';
+      await KV.put(atKey, jsonAccessToken);
+      await KV.put(rtKey, jsonRefreshToken);
+      await addToAliveAccountList(jsonAccessToken, accountNumber);
+      return generatePlusResponse(`account_number:\n${accountNumber}\n\nrefresh_token:\n${jsonRefreshToken}\n\naccess_token:\n${jsonAccessToken}`, adminuserName);
+    } else if (tokenData.accessToken) {
+      jsonAccessToken = tokenData.accessToken;
+      jsonRefreshToken = '';
+      await KV.put(atKey, jsonAccessToken);
+      await KV.put(rtKey, jsonRefreshToken);
+      await addToAliveAccountList(jsonAccessToken, accountNumber);
+      return generatePlusResponse(`account_number:\n${accountNumber}\n\nrefresh_token:\n${jsonRefreshToken}\n\naccess_token:\n${jsonAccessToken}`, adminuserName);
+    }
+ //   const result = await processToken(refreshToken, accountNumber, adminuserName);
+ // return result;
+
+  } catch (e) {
+    // 输入不是 JSON 格式
+  }
+
+  
 
   // 批量处理非 JSON 格式的 token
   if (!jsonAccessToken && refreshToken.includes(',')) {
@@ -463,7 +478,7 @@ async function processToken(token, accountNumber, adminuserName) {
   const rtKey = `rt_${accountNumber}`;
   const atKey = `at_${accountNumber}`;
 
-  // 使用非 JSON 格式的 token
+  // 使用st
   if (token.startsWith('fk-')) {
     await KV.put(atKey, token);
     await addToAliveAccountList('', accountNumber);
@@ -547,7 +562,7 @@ async function addToAliveAccountList(accessToken, accountNumber) {
   const accountType = await checkAccountType(accessToken);
   const aliveAccountsKey = `${accountType}AliveAccounts`;
 
-  let aliveAccount = await KV.get(aliveAccountsKey) || '';
+  let aliveAccount = await KV.get(aliveAccountsKey);
   let aliveAccountList = aliveAccount ? aliveAccount.split(',') : [];
   if (!aliveAccountList.includes(accountNumber)) {
     aliveAccountList.push(accountNumber);
@@ -673,7 +688,7 @@ async function getPlusHTML() {
     <form id="managePlus" action="/token" method="POST">
       <label for="adminusername">Admin Username:</label>
       <input type="password" id="adminsername" name="adminusername" required>
-      <label for="refresh_token">Refresh Token (or AT):</label>
+      <label for="refresh_token">RT/AT:</label>
       <input type="text" id="refresh_token" name="refresh_token" required>
       <label for="account_number">Account Number:</label>
       <input type="number" id="account_number" name="account_number" required>
