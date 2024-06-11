@@ -236,7 +236,7 @@ async function handleInitialPostRequest(request) {
     'TurnstileKeys', 'TurnstileSiteKey', 'Users', 'VIPUsers', 'FreeUsers', 
     'Admin', 'ForceAN', 'SetAN', 'PlusMode', 'FreeMode', 'WebName', 
     'WorkerURL','VoiceURL', 'LogoURL', 'CDKEY', 'AutoDeleteCDK', 'FKDomain', 'Status',
-    'PlusAliveAccounts', 'FreeAliveAccounts', 'rt_1', 'rt_2', 'at_1', 'at_2', 'FreeURL', 'ChatUesrName', 'ChatMail', 'ChatLogoURL', 'RemoveTurnstile'
+    'PlusAliveAccounts', 'FreeAliveAccounts', 'rt_1', 'rt_2', 'at_1', 'at_2', 'FreeURL', 'ChatUserName', 'ChatMail', 'ChatLogoURL', 'RemoveTurnstile'
   ];
 
   for (const field of fields) {
@@ -361,7 +361,7 @@ function getInitialFieldsHTML() {
     { name: 'WebName', label: '站点名称' },
     { name: 'LogoURL', label: 'Logo图片地址 (需https://)' },
     { name: 'ChatLogoURL', label: 'chat界面用户头像地址(需https://)' },
-    { name: 'ChatUesrName', label: 'chat界面用户名 (需https://)' },
+    { name: 'ChatUserName', label: 'chat界面用户名 (需https://)' },
     { name: 'ChatMail', label: 'chat界面用户邮箱 (需https://)' },
     { name: 'Users', label: '默认用户 (以aaa,bbb,ccc形式填写)' },
     { name: 'VIPUsers', label: 'VIP用户 (即私车用户，无速率和时间限制)' },
