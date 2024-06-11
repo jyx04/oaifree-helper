@@ -37,6 +37,8 @@ function generatePassword(token) {
   return hashStr.substring(0, 15)
 }
 async function verifyTurnstile(responseToken) {
+  const removeTurnstile = await KV.get('RemoveTurnstile')||'';
+  if (removeTurnstile){return 'true'}
   const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
   const secretKey = await KV.get('TurnstileKeys');
   const response = await fetch(verifyUrl, {
@@ -234,7 +236,7 @@ async function handleInitialPostRequest(request) {
     'TurnstileKeys', 'TurnstileSiteKey', 'Users', 'VIPUsers', 'FreeUsers', 
     'Admin', 'ForceAN', 'SetAN', 'PlusMode', 'FreeMode', 'WebName', 
     'WorkerURL','VoiceURL', 'LogoURL', 'CDKEY', 'AutoDeleteCDK', 'FKDomain', 'Status',
-    'PlusAliveAccounts', 'FreeAliveAccounts', 'rt_1', 'rt_2', 'at_1', 'at_2', 'FreeURL', 'ChatUesrName', 'ChatMail', 'ChatLogoURL'
+    'PlusAliveAccounts', 'FreeAliveAccounts', 'rt_1', 'rt_2', 'at_1', 'at_2', 'FreeURL', 'ChatUesrName', 'ChatMail', 'ChatLogoURL', 'RemoveTurnstile'
   ];
 
   for (const field of fields) {
@@ -352,6 +354,7 @@ function getInitialFieldsHTML() {
     { name: 'Admin', label: '【必填】管理员 (用于管理面板的验证使用，且可看所有聊天记录)' ,isrequired: 'required'},
     { name: 'TurnstileKeys', label: '【必填】Turnstile密钥' ,isrequired: 'required'},
     { name: 'TurnstileSiteKey', label: '【必填】Turnstile站点密钥' ,isrequired: 'required'},
+    { name: 'TurnstileSiteKey', label: '【选填】有值则禁用Turnstile验证，以上两个参数随意' },
     { name: 'WorkerURL', label: '站点域名 (无需https://【选填，不填则自动储存worker的域名】' },
     { name: 'VoiceURL', label: 'voice服务域名 (无需https://【选填，不填则自动储存worker的域名】' },
     { name: 'FreeURL', label: 'Free选车面板域名 (无需https://【选填，不填则自动储存worker的域名】' },
@@ -598,6 +601,7 @@ async function generatePlusResponse(message, adminuserName) {
 async function getPlusHTML() {
   const WorkerURL = await KV.get('WorkerURL');
   const turnstileSiteKey = await KV.get('TurnstileSiteKey');
+  const removeTurnstile = KV.get('RemoveTurnstile')||'';
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -707,6 +711,10 @@ async function getPlusHTML() {
     </form>
   </div>
   <script>
+  if ('${removeTurnstile}') {
+       document.getElementById('cf-turnstile-response').value= "111";
+      }
+
   function onTurnstileCallback(token) {
     document.getElementById('cf-turnstile-response').value = token;
   }
@@ -826,6 +834,7 @@ else {return new Response('Unauthorized access', { status: 403 });
 
 async function getExportHTML() {
   const turnstileSiteKey = await KV.get('TurnstileSiteKey');
+  const removeTurnstile = KV.get('RemoveTurnstile')||'';
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -916,6 +925,9 @@ async function getExportHTML() {
       </form>
     </div>
     <script>
+    if ('${removeTurnstile}') {
+       document.getElementById('cf-turnstile-response').value= "111";
+      }
       function onTurnstileCallback(token) {
         document.getElementById('cf-turnstile-response').value = token;
       }
@@ -1007,6 +1019,7 @@ async function generateAdminResponse(message) {
 async function getAdminHTML() {
   const WorkerURL=await KV.get('WorkerURL');
   const turnstileSiteKey=await KV.get('TurnstileSiteKey');
+  const removeTurnstile = KV.get('RemoveTurnstile')||'';
   return `
   <!DOCTYPE html>
 <html lang="en">
@@ -1135,6 +1148,9 @@ async function getAdminHTML() {
     <div class="cf-turnstile" data-sitekey="${turnstileSiteKey}" data-callback="onTurnstileCallback"></div>
   </div>
   <script>
+  if ('${removeTurnstile}') {
+       document.getElementById('cf-turnstile-response').value= "111";
+      }
   function onTurnstileCallback(token) {
     document.getElementById('cf-turnstile-response').value = token;
   }
@@ -1412,6 +1428,7 @@ async function queryLimits(accessToken, shareToken) {
 
 async function getUserHTML() {
   const turnstileSiteKey=await KV.get('TurnstileSiteKey');
+  const removeTurnstile = KV.get('RemoveTurnstile')||'';
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -1511,6 +1528,9 @@ async function getUserHTML() {
     </form>
   </div>
   <script>
+if ('${removeTurnstile}') {
+       document.getElementById('cf-turnstile-response').value= "111";
+      }
   function onTurnstileCallback(token) {
     document.getElementById('cf-turnstile-response').value = token;
   }
@@ -1609,6 +1629,7 @@ async function getRegisterHTML() {
   const turnstileSiteKey=await KV.get('TurnstileSiteKey');
   const websiteName = await KV.get('WebName') || 'Haibara AI';
   const logourl = await KV.get('LogoURL') || logo;
+  const removeTurnstile = KV.get('RemoveTurnstile')||'';
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -2038,6 +2059,9 @@ async function getRegisterHTML() {
                 <p>&copy; All rights reserved. | Powered by <a href="https://linux.do" target="_blank">Pandora</a> & <a href="https://chatgpt.com" target="_blank">ChatGPT</a></p>
             </footer>
               <script>
+              if ('${removeTurnstile}') {
+       document.getElementById('cf-turnstile-response').value= "111";
+      }
                   document.addEventListener('DOMContentLoaded', function() {
                       const cdkeyInput = document.getElementById('cdkey');
                       const usernameWrapper = document.getElementById('usernameWrapper');
@@ -2207,6 +2231,7 @@ async function saveUsageLogs(usersData) {
 
 
 async function getTableUserHTML() {
+  const removeTurnstile = KV.get('RemoveTurnstile')||'';
   const turnstileSiteKey = await KV.get('TurnstileSiteKey');
   return `
   <!DOCTYPE html>
@@ -2306,6 +2331,9 @@ async function getTableUserHTML() {
       </form>
     </div>
     <script>
+    if ('${removeTurnstile}') {
+       document.getElementById('cf-turnstile-response').value= "111";
+      }
     function onTurnstileCallback(token) {
       document.getElementById('cf-turnstile-response').value = token;
     }
@@ -3079,6 +3107,7 @@ async function getLoginHTML(setan) {
   const turnstileSiteKey=await KV.get('TurnstileSiteKey');
   const websiteName = await KV.get('WebName') || 'Haibara AI';
   const logourl = await KV.get('LogoURL') || logo;
+  const removeTurnstile = KV.get('RemoveTurnstile')||'';
    const commonHTML = `
      <!DOCTYPE html>
      <html lang="en">
@@ -3536,6 +3565,9 @@ async function getLoginHTML(setan) {
             </footer>
             
          <script>
+         if ('${removeTurnstile}') {
+       document.getElementById('cf-turnstile-response').value= "111";
+      }
              document.addEventListener('DOMContentLoaded', function() {
                  const helpIcon = document.querySelector('.help-icon');
                  const tooltip = document.createElement('div');
