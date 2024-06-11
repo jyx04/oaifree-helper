@@ -5,9 +5,64 @@ addEventListener('fetch', event => {
   
 })
 
-
 // @ts-ignore
 const KV = oai_global_variables;
+
+function parseJwt(token) {
+  const base64Url = token.split('.')[1];// 获取载荷部分
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join(''));
+  return JSON.parse(jsonPayload);// 返回载荷解析后的 JSON 对象
+}
+
+
+async function refreshAT(tochecktoken,an) {
+  const accessTokenKey = `at_${an}`;
+const token = tochecktoken || await KV.get(accessTokenKey) ||'';
+if (token && token !== "Bad_RT" && token !== "Old_AT")
+{
+ const payload = parseJwt(token);
+const currentTime = Math.floor(Date.now() / 1000);
+if (payload.exp > currentTime ){
+  return token
+}
+}
+  const refreshTokenKey = `rt_${an}`;
+  const url = 'https://token.oaifree.com/api/auth/refresh';
+ const refreshToken = await KV.get(refreshTokenKey);
+ if (refreshToken) {
+  // 发送 POST 请求
+ const response = await fetch(url, {
+     method: 'POST',
+     headers: {
+         'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+     },
+     body: `refresh_token=${refreshToken}`
+ });
+
+ // 检查响应状态
+   if (response.ok) {
+     const data = await response.json();
+     const newAccessToken = data.access_token;
+     await KV.put(accessTokenKey, newAccessToken);
+     return newAccessToken;
+     } else {
+     await KV.put(accessTokenKey, "Bad_RT");
+     return '';
+      }
+} 
+else {
+  await KV.put(accessTokenKey, "Old_AT");
+  return '';
+}
+
+}
+
+
+
+
 
 async function handleRequest(request,pathname) {
   // 检查Authorization头是否包含正确的秘钥
@@ -23,31 +78,21 @@ async function handleRequest(request,pathname) {
   const requestData = await request.json();
 
   // 获取 aliveaccount 的值并解析
-  const aliveAccount = await KV.get('PlusAliveAccounts');
-  let aliveAccountList = aliveAccount.split(',');
+const aliveAccount = await KV.get('PlusAliveAccounts');
+let aliveAccountList = aliveAccount.split(',');
 
-  const keys = await KV.list();
-  // 过滤出以 "at_" 开头且符合 aliveAccountList 中的键
-  const anKeys = keys.keys.filter(key => {
-    const keySuffix = key.name.split('_')[1];
-    return key.name.startsWith('at_') && aliveAccountList.includes(keySuffix);
-  });
-
-  if (anKeys.length > 0) {
-    // 从过滤出的键中随机选一个
-    const randomKey = anKeys[Math.floor(Math.random() * anKeys.length)];
-    const randomValue = await KV.get(randomKey.name);
-    // 从值中提取access_token
-    const access_token = randomValue;
-    const accountNumber = randomKey.name.split('_')[1];
-    //console.log(`Selected account number: ${accountNumber}, Access token: ${access_token}`);
+if (aliveAccountList.length > 0) {
+  // 从 aliveAccountList 中随机选一个
+    const accountNumber = aliveAccountList[Math.floor(Math.random() * aliveAccountList.length)];
+    const newaccesstoken = await refreshAT('',accountNumber);
+    //console.log(`Selected account number: ${accountNumber}, Access token: ${newaccesstoken}`);
 
     // 构建API请求
     const apiRequest = new Request(`https://api.oaifree.com${pathname}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${access_token}`
+        'Authorization': `Bearer ${newaccesstoken}`
       },
       body: JSON.stringify(requestData)
     });
@@ -95,4 +140,7 @@ async function deletelog(userName, accountNumber,antype) {
   // @ts-ignore
   await KV.put(`${antype}DeleteLogs`, JSON.stringify(logArray));
 }
+
+
+
 
