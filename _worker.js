@@ -7,6 +7,8 @@ addEventListener('fetch', event => {
  
  
  //通用函数
+
+
  function parseJwt(token) {
   const base64Url = token.split('.')[1];// 获取载荷部分
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -14,6 +16,49 @@ addEventListener('fetch', event => {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
   }).join(''));
   return JSON.parse(jsonPayload);// 返回载荷解析后的 JSON 对象
+}
+
+//刷新AT
+async function refreshAT(tochecktoken,an) {
+  // 检查 token 是否存在，如果不存在或为空字符串，直接返回 true  
+  const accessTokenKey = `at_${an}`;
+const token = tochecktoken || await KV.get(accessTokenKey) ||'';
+if (token && token !== "Bad_RT" && token !== "Old_AT")
+{
+ const payload = parseJwt(token);
+const currentTime = Math.floor(Date.now() / 1000);// 获取当前时间戳（秒）
+if (payload.exp > currentTime ){
+  return token
+}
+}
+  const refreshTokenKey = `rt_${an}`;
+  const url = 'https://token.oaifree.com/api/auth/refresh';
+ const refreshToken = await KV.get(refreshTokenKey);
+ if (refreshToken) {
+  // 发送 POST 请求
+ const response = await fetch(url, {
+     method: 'POST',
+     headers: {
+         'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+     },
+     body: `refresh_token=${refreshToken}`
+ });
+
+ // 检查响应状态
+   if (response.ok) {
+     const data = await response.json();
+     const newAccessToken = data.access_token;
+     await KV.put(accessTokenKey, newAccessToken);
+     return newAccessToken;
+     } else {
+     await KV.put(accessTokenKey, "Bad_RT");
+     return '';
+      }
+} 
+else {
+  await KV.put(accessTokenKey, "Old_AT");
+  return '';
+}
 }
 
 
@@ -760,24 +805,33 @@ async function exportToken(tokenType, accountType) {
   const accountTypeKey = `${accountType}AliveAccounts`;
 
   // 获取对应类型的账户列表
-  let aliveAccount = await KV.get(accountTypeKey) || '';
+  let aliveAccount = await KV.get(accountTypeKey);
   if (!aliveAccount) {
     return new Response('No accounts found', { status: 404 });
   }
 
   let accountNumbers = aliveAccount.split(',');
-
-  // 获取所有账户号码对应的令牌
   let tokens = [];
-  for (let accountNumber of accountNumbers) {
-    let tokenKey = `${tokenType}_${accountNumber}`;
-    let token = await KV.get(tokenKey);
-    if (token) {
-      tokens.push(token);
-    }
+
+  // 分批次处理账户，假设每批次处理 10 个账户
+  const batchSize = 10;
+  for (let i = 0; i < accountNumbers.length; i += batchSize) {
+    const batch = accountNumbers.slice(i, i + batchSize);
+
+    // 使用 Promise.all 并行处理
+    const batchTokens = await Promise.all(batch.map(async (accountNumber) => {
+      if (tokenType == 'at') {
+        return await refreshAT('', accountNumber);
+      } else {
+        let rtKey = `${tokenType}_${accountNumber}`;
+        return await KV.get(rtKey);
+      }
+    }));
+
+    tokens.push(...batchTokens);
   }
 
-  // 创建txt文件
+  // 创建 txt 文件
   let fileContent = tokens.join('\n');
   let fileName = `${tokenType}.txt`;
 
