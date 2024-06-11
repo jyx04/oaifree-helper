@@ -354,7 +354,7 @@ function getInitialFieldsHTML() {
     { name: 'Admin', label: '【必填】管理员 (用于管理面板的验证使用，且可看所有聊天记录)' ,isrequired: 'required'},
     { name: 'TurnstileKeys', label: '【必填】Turnstile密钥' ,isrequired: 'required'},
     { name: 'TurnstileSiteKey', label: '【必填】Turnstile站点密钥' ,isrequired: 'required'},
-    { name: 'TurnstileSiteKey', label: '【选填】有值则禁用Turnstile验证，以上两个参数随意' },
+    { name: 'Remove Turnstile', label: '【选填】有值则禁用Turnstile验证，以上两个参数随意' },
     { name: 'WorkerURL', label: '站点域名 (无需https://【选填，不填则自动储存worker的域名】' },
     { name: 'VoiceURL', label: 'voice服务域名 (无需https://【选填，不填则自动储存worker的域名】' },
     { name: 'FreeURL', label: 'Free选车面板域名 (无需https://【选填，不填则自动储存worker的域名】' },
@@ -601,7 +601,7 @@ async function generatePlusResponse(message, adminuserName) {
 async function getPlusHTML() {
   const WorkerURL = await KV.get('WorkerURL');
   const turnstileSiteKey = await KV.get('TurnstileSiteKey');
-  const removeTurnstile = KV.get('RemoveTurnstile')||'';
+  const removeTurnstile = await KV.get('RemoveTurnstile')||'';
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -834,7 +834,7 @@ else {return new Response('Unauthorized access', { status: 403 });
 
 async function getExportHTML() {
   const turnstileSiteKey = await KV.get('TurnstileSiteKey');
-  const removeTurnstile = KV.get('RemoveTurnstile')||'';
+  const removeTurnstile = await KV.get('RemoveTurnstile')||'';
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -1019,7 +1019,7 @@ async function generateAdminResponse(message) {
 async function getAdminHTML() {
   const WorkerURL=await KV.get('WorkerURL');
   const turnstileSiteKey=await KV.get('TurnstileSiteKey');
-  const removeTurnstile = KV.get('RemoveTurnstile')||'';
+  const removeTurnstile = await KV.get('RemoveTurnstile')||'';
   return `
   <!DOCTYPE html>
 <html lang="en">
@@ -1428,7 +1428,7 @@ async function queryLimits(accessToken, shareToken) {
 
 async function getUserHTML() {
   const turnstileSiteKey=await KV.get('TurnstileSiteKey');
-  const removeTurnstile = KV.get('RemoveTurnstile')||'';
+  const removeTurnstile = await KV.get('RemoveTurnstile')||'';
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -1629,7 +1629,7 @@ async function getRegisterHTML() {
   const turnstileSiteKey=await KV.get('TurnstileSiteKey');
   const websiteName = await KV.get('WebName') || 'Haibara AI';
   const logourl = await KV.get('LogoURL') || logo;
-  const removeTurnstile = KV.get('RemoveTurnstile')||'';
+  const removeTurnstile = await KV.get('RemoveTurnstile')||'';
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -2231,7 +2231,7 @@ async function saveUsageLogs(usersData) {
 
 
 async function getTableUserHTML() {
-  const removeTurnstile = KV.get('RemoveTurnstile')||'';
+  const removeTurnstile = await KV.get('RemoveTurnstile')||'';
   const turnstileSiteKey = await KV.get('TurnstileSiteKey');
   return `
   <!DOCTYPE html>
@@ -3107,7 +3107,7 @@ async function getLoginHTML(setan) {
   const turnstileSiteKey=await KV.get('TurnstileSiteKey');
   const websiteName = await KV.get('WebName') || 'Haibara AI';
   const logourl = await KV.get('LogoURL') || logo;
-  const removeTurnstile = KV.get('RemoveTurnstile')||'';
+  const removeTurnstile = await KV.get('RemoveTurnstile')||'';
    const commonHTML = `
      <!DOCTYPE html>
      <html lang="en">
