@@ -57,7 +57,7 @@ WebName //站点名称
 WorkerURL //站点域名，无需https://若无自己的域名，则为worker默认域名：[worker名].[用户名].workers.dev
 LogoURL //图片地址，需https://，若无图床可填图片本地base64编码，不宜过大
 ChatLogoURL //chat界面显示的用户头像地址，需https://，若无图床可填图片本地base64编码，不宜过大
-ChatUesrName //chat界面显示的用户名
+ChatUserName //chat界面显示的用户名
 ChatMail //chat界面显示的用户邮箱
 
 Users //默认用户，以aaa,bbb,ccc形式填写，能访问所有车牌
