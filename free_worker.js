@@ -396,7 +396,7 @@ if (cookies) {
   
   
   async function verifyTurnstile(responseToken) {
-      const removeTurnstile = KV.get('RemoveTurnstile')||'';
+      const removeTurnstile = await KV.get('RemoveTurnstile')||'';
       if (removeTurnstile){return 'true'}
     const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
     const secretKey = await KV.get('TurnstileKeys');
@@ -889,7 +889,7 @@ if (cookies) {
     const WorkerURL=await KV.get('WorkerURL');
     const turnstileSiteKey=await KV.get('TurnstileSiteKey');
     const websiteName = await KV.get('FreeWebName') || await KV.get('WebName') || 'Haibara AI';
-      const removeTurnstile = KV.get('RemoveTurnstile')||'';
+      const removeTurnstile = await KV.get('RemoveTurnstile')||'';
       return `
     <!DOCTYPE html>
     <html lang="en">
