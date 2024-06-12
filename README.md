@@ -15,6 +15,7 @@
    - 支持人机验证
    - 点击登录页Logo跳转管理面板,包含用户管理、token池管理、用量查询、token批量导出
    - 支持替换Chat页面显示的头像/用户名/邮箱【新】
+   - 支持道德审查接口【新】
    <img width="500" alt="image" src="https://github.com/jyx04/oaifree_helper/assets/166741903/3675a0bf-efd4-4cf3-a42b-4e96fab83bb2">
    <img width="500" alt="image" src="https://github.com/jyx04/oaifree-helper/assets/166741903/f440f0b8-7682-4d68-9eb4-9d8be2eccccd">
    <img width="500" alt="image" src="https://github.com/jyx04/oaifree-helper/assets/166741903/0cd4e326-5580-4c45-8868-8474bbaf3756">
@@ -139,6 +140,11 @@ at_2
    - api的BaseURL为api worker的地址，`apikey`为admin密码，支持的服务请参考始皇的服务文档
    - OneAPI/NewAPI示例：
    - <img width="300" alt="image" src="https://github.com/jyx04/oaifree-helper/assets/166741903/a01912c5-f43e-4c62-8b76-d47d80aeca00">
+
+
+### 8. 接入道德审查功能（新增）
+   - 此功能代码完全来自[Linux.do-Lvguanjun](https://linux.do/t/topic/99742)，感谢大佬！
+   - 如需启用此功能，需在KV中新增变量`ModerationApiKey`,填入始皇oaipro的apikey
 
 ### 8. 个性化和杂项
    - 参考以下环境变量
