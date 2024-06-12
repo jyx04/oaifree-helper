@@ -259,7 +259,7 @@ if (cookies) {
                 apiKey
             );
             if (moderationResult.shouldBlock) {
-              const UserName = aina;///const UserName = await generateUserName(aina);
+              const UserName = userMessages;
               await deletelog(UserName,aian,'Message');
               
                 return new Response(
