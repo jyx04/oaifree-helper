@@ -135,6 +135,7 @@ async function handleRequest(request) {
   const chatlogourl = await KV.get('ChatLogoURL') || await KV.get('LogoURL') || logo;
   const chatusername = await KV.get('ChatUserName') || 'Haibara AI';
   const chatmail = await KV.get('ChatMail') || 'Power by Pandora';
+  const apiKey = await KV.get('ModerationApiKey');
    const cookies = request.headers.get('Cookie');
   let aian = '';
 if (cookies) {
@@ -241,6 +242,46 @@ if (cookies) {
      url.protocol = 'https';
      return fetch(new Request(url, request));
    }
+
+  if (apiKey) {
+    if (url.pathname === "/backend-api/conversation") {
+        const requestBody = await newRequest.json();
+        const userMessages = requestBody.messages
+            .filter(
+                (msg) =>
+                    msg.author.role === "user" && msg.content.content_type === "text"
+            )
+            .map((msg) => msg.content.parts.join(" "));
+
+        if (userMessages.length > 0) {
+            const moderationResult = await checkContentForModeration(
+                userMessages,
+                apiKey
+            );
+            if (moderationResult.shouldBlock) {
+              const UserName = aina;///const UserName = await generateUserName(aina);
+              await deletelog(UserName,aian,'Message');
+              
+                return new Response(
+                    JSON.stringify({ detail: "此内容可能违反了我们的使用政策" }),
+                    {
+                        status: 451,
+                        headers: { "Content-Type": "application/json" },
+                    }
+                );
+            }
+        }
+        
+        url.host = "new.oaifree.com";
+        const newnewRequest = new Request(url, {
+            body: JSON.stringify(requestBody),
+            method: request.method,
+            headers: newHeaders,
+        });
+        return fetch(newnewRequest);
+    }
+}
+  
   //Voice地址和其他
  url.host = 'new.oaifree.com';
  const modifiedRequest = new Request(url, request);
@@ -305,7 +346,7 @@ async function handleInitialPostRequest(request) {
     'TurnstileKeys', 'TurnstileSiteKey', 'Users', 'VIPUsers', 'FreeUsers', 
     'Admin', 'ForceAN', 'SetAN', 'PlusMode', 'FreeMode', 'WebName', 
     'WorkerURL','VoiceURL', 'LogoURL', 'CDKEY', 'AutoDeleteCDK', 'FKDomain', 'Status',
-    'PlusAliveAccounts', 'FreeAliveAccounts', 'rt_1', 'rt_2', 'at_1', 'at_2', 'FreeURL', 'ChatUserName', 'ChatMail', 'ChatLogoURL', 'RemoveTurnstile'
+    'PlusAliveAccounts', 'FreeAliveAccounts', 'rt_1', 'rt_2', 'at_1', 'at_2', 'FreeURL', 'ChatUserName', 'ChatMail', 'ChatLogoURL', 'RemoveTurnstile','ModerationApiKey'
   ];
 
   for (const field of fields) {
@@ -424,6 +465,7 @@ function getInitialFieldsHTML() {
     { name: 'TurnstileKeys', label: '【必填】Turnstile密钥' ,isrequired: 'required'},
     { name: 'TurnstileSiteKey', label: '【必填】Turnstile站点密钥' ,isrequired: 'required'},
     { name: 'Remove Turnstile', label: '【选填】有值则禁用Turnstile验证，以上两个参数随意' },
+    { name: 'ModerationApiKey', label: '【选填】如需启用道德审查，则填入始皇oaipro的apikey' },
     { name: 'WorkerURL', label: '站点域名 (无需https://【选填，不填则自动储存worker的域名】' },
     { name: 'VoiceURL', label: 'voice服务域名 (无需https://【选填，不填则自动储存worker的域名】' },
     { name: 'FreeURL', label: 'Free选车面板域名 (无需https://【选填，不填则自动储存worker的域名】' },
