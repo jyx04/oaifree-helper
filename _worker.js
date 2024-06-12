@@ -103,6 +103,30 @@ async function usermatch(userName, usertype) {
   return typeUsersArray.includes(userName); // 检查用户名是否在类型用户数组中
 }
 
+// 使用 OpenAI 的道德审核接口检查内容
+async function checkContentForModeration(messages, apiKey) {
+  const response = await fetch("https://api.oaipro.com/v1/moderations", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({ input: messages }),
+  });
+  // 检查 HTTP 响应是否成功
+  if (response.ok) {
+    // response.ok 是一个便捷属性，当状态码在 200-299 范围内时为 true
+    const data = await response.json();
+    return {
+      shouldBlock: data.results.some((result) => result.flagged),
+    };
+  } else {
+    console.error("Moderation API returned an error:", response.status);
+    return { shouldBlock: false }; // 如果 API 调用失败，假定内容是安全的
+  }
+}
+
+
 //各种路径的功能
 async function handleRequest(request) {
   const url = new URL(request.url);
