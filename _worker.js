@@ -245,7 +245,7 @@ if (cookies) {
 
   if (apiKey) {
     if (url.pathname === "/backend-api/conversation") {
-        const requestBody = await newRequest.json();
+        const requestBody = await request.json();
         const userMessages = requestBody.messages
             .filter(
                 (msg) =>
@@ -276,7 +276,7 @@ if (cookies) {
         const newnewRequest = new Request(url, {
             body: JSON.stringify(requestBody),
             method: request.method,
-            headers: newHeaders,
+            headers: request.headers,
         });
         return fetch(newnewRequest);
     }
