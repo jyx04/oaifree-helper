@@ -136,6 +136,7 @@ async function handleRequest(request) {
   const chatusername = await KV.get('ChatUserName') || 'Haibara AI';
   const chatmail = await KV.get('ChatMail') || 'Power by Pandora';
   const apiKey = await KV.get('ModerationApiKey');
+  const moderationFree = await KV.get('ModerationFree');
    const cookies = request.headers.get('Cookie');
   let aian = '';
   let fullUserName = "";
@@ -247,7 +248,7 @@ async function handleRequest(request) {
      return fetch(new Request(url, request));
    }
 
-  if(fullUserName !== "yangxin"){
+  if(fullUserName !== moderationFree){
       if (apiKey) {
         if (url.pathname === "/backend-api/conversation") {
           const requestBody = await request.json();
@@ -346,7 +347,7 @@ async function handleInitialPostRequest(request) {
     'TurnstileKeys', 'TurnstileSiteKey', 'Users', 'VIPUsers', 'FreeUsers', 
     'Admin', 'ForceAN', 'SetAN', 'PlusMode', 'FreeMode', 'WebName', 
     'WorkerURL','VoiceURL', 'LogoURL', 'CDKEY', 'AutoDeleteCDK', 'FKDomain', 'Status',
-    'PlusAliveAccounts', 'FreeAliveAccounts', 'rt_1', 'rt_2', 'at_1', 'at_2', 'FreeURL', 'ChatUserName', 'ChatMail', 'ChatLogoURL', 'RemoveTurnstile','ModerationApiKey'
+    'PlusAliveAccounts', 'FreeAliveAccounts', 'rt_1', 'rt_2', 'at_1', 'at_2', 'FreeURL', 'ChatUserName', 'ChatMail', 'ChatLogoURL', 'RemoveTurnstile','ModerationApiKey','ModerationFree'
   ];
 
   for (const field of fields) {
@@ -466,6 +467,7 @@ function getInitialFieldsHTML() {
     { name: 'TurnstileSiteKey', label: '【必填】Turnstile站点密钥' ,isrequired: 'required'},
     { name: 'Remove Turnstile', label: '【选填】有值则禁用Turnstile验证，以上两个参数随意' },
     { name: 'ModerationApiKey', label: '【选填】如需启用道德审查，则填入始皇oaipro的apikey' },
+    { name: 'ModerationFree', label: '【选填】如需启用道德审查，道德审查豁免用户' },
     { name: 'WorkerURL', label: '站点域名 (无需https://【选填，不填则自动储存worker的域名】' },
     { name: 'VoiceURL', label: 'voice服务域名 (无需https://【选填，不填则自动储存worker的域名】' },
     { name: 'FreeURL', label: 'Free选车面板域名 (无需https://【选填，不填则自动储存worker的域名】' },
