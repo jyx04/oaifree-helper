@@ -138,15 +138,19 @@ async function handleRequest(request) {
   const apiKey = await KV.get('ModerationApiKey');
    const cookies = request.headers.get('Cookie');
   let aian = '';
-if (cookies) {
-  const cookiesArray = cookies.split(';');
-  for (const cookie of cookiesArray) {
-    const [name, value] = cookie.trim().split('=');
-    if (name === 'aian') {
-      aian = value;
-    } 
-  }
-}
+  let fullUserName = "";
+    if (cookies) {
+      const cookiesArray = cookies.split(";");
+      for (const cookie of cookiesArray) {
+        const [name, value] = cookie.trim().split("=");
+        if (name === "aian") {
+          aian = value;
+        }
+        if (name === "userName") {
+          fullUserName = value;
+        }
+      }
+    }
   
   //处理直链登陆形式
   const params = new URLSearchParams(url.search);
@@ -243,44 +247,40 @@ if (cookies) {
      return fetch(new Request(url, request));
    }
 
-  if (apiKey) {
-    if (url.pathname === "/backend-api/conversation") {
-        const requestBody = await request.json();
-        const userMessages = requestBody.messages
-            .filter(
-                (msg) =>
-                    msg.author.role === "user" && msg.content.content_type === "text"
-            )
-            .map((msg) => msg.content.parts.join(" "));
-
-        if (userMessages.length > 0) {
+  if(fullUserName !== "yangxin"){
+      if (apiKey) {
+        if (url.pathname === "/backend-api/conversation") {
+          const requestBody = await request.json();
+          const userMessages = requestBody.messages.filter(
+            (msg) => msg.author.role === "user" && msg.content.content_type === "text"
+          ).map((msg) => msg.content.parts.join(" "));
+          if (userMessages.length > 0) {
             const moderationResult = await checkContentForModeration(
-                userMessages,
-                apiKey
+              userMessages,
+              apiKey
             );
             if (moderationResult.shouldBlock) {
               const UserName = userMessages;
-              await deletelog(UserName,aian,'Message');
-              
-                return new Response(
-                    JSON.stringify({ detail: "此内容可能违反了我们的使用政策" }),
-                    {
-                        status: 451,
-                        headers: { "Content-Type": "application/json" },
-                    }
-                );
+              await deletelog(UserName, aian, "Message");
+              return new Response(
+                JSON.stringify({ detail: "\u6B64\u5185\u5BB9\u53EF\u80FD\u8FDD\u53CD\u4E86\u6211\u4EEC\u7684\u4F7F\u7528\u653F\u7B56" }),
+                {
+                  status: 451,
+                  headers: { "Content-Type": "application/json" }
+                }
+              );
             }
-        }
-        
-        url.host = "new.oaifree.com";
-        const newnewRequest = new Request(url, {
+          }
+          url.host = "new.oaifree.com";
+          const newnewRequest = new Request(url, {
             body: JSON.stringify(requestBody),
             method: request.method,
-            headers: request.headers,
-        });
-        return fetch(newnewRequest);
+            headers: request.headers
+          });
+          return fetch(newnewRequest);
+        }
+      }
     }
-}
   
   //Voice地址和其他
  url.host = 'new.oaifree.com';
@@ -3014,7 +3014,7 @@ accountNumber = await getAccountNumber(fullUserName,initialaccountNumber, antype
        const headers = new Headers();
      headers.append('Location', oauthLink);
      headers.append('Set-Cookie', `aian=${accountNumber}; Path=/`);
-     
+     headers.append("Set-Cookie", `userName=${fullUserName}; Path=/`);
      
        const response = new Response(null, {
            status: 302,
