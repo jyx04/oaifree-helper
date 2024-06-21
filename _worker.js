@@ -320,10 +320,7 @@ if (cookies) {
      headers: response.headers
    });
  }
-   return response;
-}
-
-if (url.pathname === '/backend-api/accounts/check') {
+  if (url.pathname === '/backend-api/accounts/check') {
   const data = await response.json();
   for (const accountId in data.accounts) {
     if (data.accounts[accountId].account) {
@@ -335,8 +332,11 @@ if (url.pathname === '/backend-api/accounts/check') {
     headers: response.headers
   });
 }
-return response;
+   return response;
 }
+
+
+
 
 //初始化信息填入功能
 async function handleInitialRequest(request) {
