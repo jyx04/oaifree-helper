@@ -336,6 +336,7 @@ if (url.pathname === '/backend-api/accounts/check') {
   });
 }
 return response;
+}
 
 //初始化信息填入功能
 async function handleInitialRequest(request) {
@@ -2667,25 +2668,6 @@ async function generateTableHTML(usersData, queryType) {
   `;
 }
 
-function combineData(usersData, historyData) {
-  let combinedData = [];
-  let allUsers = new Set(usersData.map(u => u.user).concat(historyData.flatMap(h => h.usersData.map(u => u.user))));
-
-  allUsers.forEach(user => {
-    let historyUsage = historyData.map(h => {
-      let userUsage = h.usersData.find(u => u.user === user);
-      return userUsage ? { gpt4: userUsage.gpt4, gpt35: userUsage.gpt35 } : { gpt4: '', gpt35: '' };
-    });
-    let realTimeUsage = usersData.find(u => u.user === user);
-    combinedData.push({
-      user,
-      historyUsage,
-      realTimeUsage: realTimeUsage ? { gpt4: realTimeUsage.gpt4, gpt35: realTimeUsage.gpt35 } : { gpt4: '', gpt35: '' }
-    });
-  });
-
-  return combinedData;
-}
 
 function generateHeaderRow(historyData) {
   return historyData.map(h => `<th>GPT-4</th><th>GPT-3.5</th>`).join('');
