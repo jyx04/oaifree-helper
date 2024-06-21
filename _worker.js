@@ -324,17 +324,18 @@ if (cookies) {
 }
 
 if (url.pathname === '/backend-api/accounts/check') {
-const data = await response.json();
-for (const accountId in data.accounts) {
-if (data.accounts[accountId].account) {
-data.accounts[accountId].account.name = ${chatusername} [${aian}];
+  const data = await response.json();
+  for (const accountId in data.accounts) {
+    if (data.accounts[accountId].account) {
+      data.accounts[accountId].account.name = `${chatusername} [${aian}]`;
+    }
+  }
+  return new Response(JSON.stringify(data), {
+    status: response.status,
+    headers: response.headers
+  });
 }
-}
-return new Response(JSON.stringify(data), {
-status: response.status,
-headers: response.headers
-});
-}
+return response;
 
 //初始化信息填入功能
 async function handleInitialRequest(request) {
