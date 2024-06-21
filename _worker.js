@@ -2722,27 +2722,6 @@ function combineData(usersData, historyData) {
   return combinedData;
 }
 
-function generateHeaderRow(historyData) {
-  return historyData.map(h => `<th>GPT-4</th><th>GPT-3.5</th>`).join('');
-}
-
-function generateTimestampRow(historyData) {
-  return historyData.map(h => `<th colspan="2">${h.timestamp}</th>`).join('');
-}
-
-async function getHistoryData(queryType) {
-  const logType = queryType === 'plus' ? 'PlusUsageLogs' : 'FreeUsageLogs';
-  const historyLogs = await KV.get(logType);
-  return historyLogs ? JSON.parse(historyLogs) : [];
-}
-
-
-
-
-
-
-
-
 
 
 
