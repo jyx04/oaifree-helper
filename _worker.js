@@ -1402,7 +1402,18 @@ async function deleteUsers(usersToDelete) {
     // Update KV store
     await KV.put(userType, updatedUsers);
   }
-  //删除用户的历史sharetoken
+  
+  /*
+//注销该用的sharetoken,注销所有账号该用户的sharetoken【严格】，如需启用则取消注释这一段
+const plusAliveAccounts = await KV.get('PlusAliveAccounts');
+const accountNumbers = plusAliveAccounts.split(','); // 假设KV.PlusAliveAccounts返回的格式是"1,2,3,4,5"
+for (const accountNumber of accountNumbers) {
+    await deleteShareToken(usersToDelete, accountNumber);
+}
+return '删除成功';  
+*/
+  
+  //注销用户的历史sharetoken，仅注销最后一次登陆所用的
   const accountNumber = await getToCheckAccountNumber(userName,'Plus');
   return await deleteShareToken(usersToDelete,accountNumber);
 }
@@ -1410,7 +1421,7 @@ async function deleteUsers(usersToDelete) {
 async function deleteShareToken(userName,accountNumber) {
   const url = 'https://chat.oaifree.com/token/register';
   const passed = generatePassword(userName);
-  const accessToken = await KV.get(`at_${accountNumber}`) || '1';
+  const accessToken = await KV.get(`at_${accountNumber}`) || 'xxx';
  /*  
    const tokenPrefix = await KV.get('TokenPrefix');
   const baseUserName = tokenPrefix + userName.replace(/_\d+$/, ''); // 移除用户名后的编号 */
