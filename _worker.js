@@ -1403,14 +1403,13 @@ async function deleteUsers(usersToDelete) {
     await KV.put(userType, updatedUsers);
   }
   //删除用户的历史sharetoken
-  return await deleteShareToken(usersToDelete);
+  const accountNumber = await getToCheckAccountNumber(userName,'Plus');
+  return await deleteShareToken(usersToDelete,accountNumber);
 }
     
-async function deleteShareToken(userName) {
+async function deleteShareToken(userName,accountNumber) {
   const url = 'https://chat.oaifree.com/token/register';
-  const passed = generatePassword(userName)
-  
-  const accountNumber = await getToCheckAccountNumber(userName,'Plus');
+  const passed = generatePassword(userName);
   const accessToken = await KV.get(`at_${accountNumber}`) || '1';
  /*  
    const tokenPrefix = await KV.get('TokenPrefix');
