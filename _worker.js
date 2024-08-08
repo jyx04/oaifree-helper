@@ -136,17 +136,22 @@ async function handleRequest(request) {
   const chatusername = await KV.get('ChatUserName') || 'Haibara AI';
   const chatmail = await KV.get('ChatMail') || 'Power by Pandora';
   const apiKey = await KV.get('ModerationApiKey');
+  const moderationFree = await KV.get('ModerationFree');
    const cookies = request.headers.get('Cookie');
   let aian = '';
-if (cookies) {
-  const cookiesArray = cookies.split(';');
-  for (const cookie of cookiesArray) {
-    const [name, value] = cookie.trim().split('=');
-    if (name === 'aian') {
-      aian = value;
-    } 
-  }
-}
+  let fullUserName = "";
+    if (cookies) {
+      const cookiesArray = cookies.split(";");
+      for (const cookie of cookiesArray) {
+        const [name, value] = cookie.trim().split("=");
+        if (name === "aian") {
+          aian = value;
+        }
+        if (name === "userName") {
+          fullUserName = value;
+        }
+      }
+    }
   
   //处理直链登陆形式
   const params = new URLSearchParams(url.search);
@@ -243,44 +248,40 @@ if (cookies) {
      return fetch(new Request(url, request));
    }
 
-  if (apiKey) {
-    if (url.pathname === "/backend-api/conversation") {
-        const requestBody = await request.json();
-        const userMessages = requestBody.messages
-            .filter(
-                (msg) =>
-                    msg.author.role === "user" && msg.content.content_type === "text"
-            )
-            .map((msg) => msg.content.parts.join(" "));
-
-        if (userMessages.length > 0) {
+  if(fullUserName !== moderationFree){
+      if (apiKey) {
+        if (url.pathname === "/backend-api/conversation") {
+          const requestBody = await request.json();
+          const userMessages = requestBody.messages.filter(
+            (msg) => msg.author.role === "user" && msg.content.content_type === "text"
+          ).map((msg) => msg.content.parts.join(" "));
+          if (userMessages.length > 0) {
             const moderationResult = await checkContentForModeration(
-                userMessages,
-                apiKey
+              userMessages,
+              apiKey
             );
             if (moderationResult.shouldBlock) {
               const UserName = userMessages;
-              await deletelog(UserName,aian,'Message');
-              
-                return new Response(
-                    JSON.stringify({ detail: "此内容可能违反了我们的使用政策" }),
-                    {
-                        status: 451,
-                        headers: { "Content-Type": "application/json" },
-                    }
-                );
+              await deletelog(UserName, aian, "Message");
+              return new Response(
+                JSON.stringify({ detail: "\u6B64\u5185\u5BB9\u53EF\u80FD\u8FDD\u53CD\u4E86\u6211\u4EEC\u7684\u4F7F\u7528\u653F\u7B56" }),
+                {
+                  status: 451,
+                  headers: { "Content-Type": "application/json" }
+                }
+              );
             }
-        }
-        
-        url.host = "new.oaifree.com";
-        const newnewRequest = new Request(url, {
+          }
+          url.host = "new.oaifree.com";
+          const newnewRequest = new Request(url, {
             body: JSON.stringify(requestBody),
             method: request.method,
-            headers: request.headers,
-        });
-        return fetch(newnewRequest);
+            headers: request.headers
+          });
+          return fetch(newnewRequest);
+        }
+      }
     }
-}
   
   //Voice地址和其他
  url.host = 'new.oaifree.com';
@@ -360,7 +361,7 @@ async function handleInitialPostRequest(request) {
     'TurnstileKeys', 'TurnstileSiteKey', 'Users', 'VIPUsers', 'FreeUsers', 
     'Admin', 'ForceAN', 'SetAN', 'PlusMode', 'FreeMode', 'WebName', 
     'WorkerURL','VoiceURL', 'LogoURL', 'CDKEY', 'AutoDeleteCDK', 'FKDomain', 'Status',
-    'PlusAliveAccounts', 'FreeAliveAccounts', 'rt_1', 'rt_2', 'at_1', 'at_2', 'FreeURL', 'ChatUserName', 'ChatMail', 'ChatLogoURL', 'RemoveTurnstile','ModerationApiKey'
+    'PlusAliveAccounts', 'FreeAliveAccounts', 'rt_1', 'rt_2', 'at_1', 'at_2', 'FreeURL', 'ChatUserName', 'ChatMail', 'ChatLogoURL', 'RemoveTurnstile','ModerationApiKey','ModerationFree'
   ];
 
   for (const field of fields) {
@@ -480,6 +481,7 @@ function getInitialFieldsHTML() {
     { name: 'TurnstileSiteKey', label: '【必填】Turnstile站点密钥' ,isrequired: 'required'},
     { name: 'Remove Turnstile', label: '【选填】有值则禁用Turnstile验证，以上两个参数随意' },
     { name: 'ModerationApiKey', label: '【选填】如需启用道德审查，则填入始皇oaipro的apikey' },
+    { name: 'ModerationFree', label: '【选填】如需启用道德审查，道德审查豁免用户' },
     { name: 'WorkerURL', label: '站点域名 (无需https://【选填，不填则自动储存worker的域名】' },
     { name: 'VoiceURL', label: 'voice服务域名 (无需https://【选填，不填则自动储存worker的域名】' },
     { name: 'FreeURL', label: 'Free选车面板域名 (无需https://【选填，不填则自动储存worker的域名】' },
@@ -2998,7 +3000,7 @@ accountNumber = await getAccountNumber(fullUserName,initialaccountNumber, antype
        const headers = new Headers();
      headers.append('Location', oauthLink);
      headers.append('Set-Cookie', `aian=${accountNumber}; Path=/`);
-     
+     headers.append("Set-Cookie", `userName=${fullUserName}; Path=/`);
      
        const response = new Response(null, {
            status: 302,
