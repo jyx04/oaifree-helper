@@ -321,8 +321,22 @@ async function handleRequest(request) {
      headers: response.headers
    });
  }
+  if (url.pathname === '/backend-api/accounts/check') {
+  const data = await response.json();
+  for (const accountId in data.accounts) {
+    if (data.accounts[accountId].account) {
+      data.accounts[accountId].account.name = `${chatusername} [${aian}]`;
+    }
+  }
+  return new Response(JSON.stringify(data), {
+    status: response.status,
+    headers: response.headers
+  });
+}
    return response;
 }
+
+
 
 
 //初始化信息填入功能
@@ -1390,16 +1404,26 @@ async function deleteUsers(usersToDelete) {
     // Update KV store
     await KV.put(userType, updatedUsers);
   }
-  //删除用户的历史sharetoken
-  return await deleteShareToken(usersToDelete);
+  
+  /*
+//注销该用的sharetoken,注销所有账号该用户的sharetoken【严格】，如需启用则取消注释这一段
+const plusAliveAccounts = await KV.get('PlusAliveAccounts');
+const accountNumbers = plusAliveAccounts.split(','); // 假设KV.PlusAliveAccounts返回的格式是"1,2,3,4,5"
+for (const accountNumber of accountNumbers) {
+    await deleteShareToken(usersToDelete, accountNumber);
+}
+return '删除成功';  
+*/
+  
+  //注销用户的历史sharetoken，仅注销最后一次登陆所用的
+  const accountNumber = await getToCheckAccountNumber(userName,'Plus');
+  return await deleteShareToken(usersToDelete,accountNumber);
 }
     
-async function deleteShareToken(userName) {
+async function deleteShareToken(userName,accountNumber) {
   const url = 'https://chat.oaifree.com/token/register';
-  const passed = generatePassword(userName)
-  
-  const accountNumber = await getToCheckAccountNumber(userName,'Plus');
-  const accessToken = await KV.get(`at_${accountNumber}`) || '1';
+  const passed = generatePassword(userName);
+  const accessToken = await KV.get(`at_${accountNumber}`) || 'xxx';
  /*  
    const tokenPrefix = await KV.get('TokenPrefix');
   const baseUserName = tokenPrefix + userName.replace(/_\d+$/, ''); // 移除用户名后的编号 */
@@ -2656,25 +2680,6 @@ async function generateTableHTML(usersData, queryType) {
   `;
 }
 
-function combineData(usersData, historyData) {
-  let combinedData = [];
-  let allUsers = new Set(usersData.map(u => u.user).concat(historyData.flatMap(h => h.usersData.map(u => u.user))));
-
-  allUsers.forEach(user => {
-    let historyUsage = historyData.map(h => {
-      let userUsage = h.usersData.find(u => u.user === user);
-      return userUsage ? { gpt4: userUsage.gpt4, gpt35: userUsage.gpt35 } : { gpt4: '', gpt35: '' };
-    });
-    let realTimeUsage = usersData.find(u => u.user === user);
-    combinedData.push({
-      user,
-      historyUsage,
-      realTimeUsage: realTimeUsage ? { gpt4: realTimeUsage.gpt4, gpt35: realTimeUsage.gpt35 } : { gpt4: '', gpt35: '' }
-    });
-  });
-
-  return combinedData;
-}
 
 function generateHeaderRow(historyData) {
   return historyData.map(h => `<th>GPT-4</th><th>GPT-3.5</th>`).join('');
@@ -2710,27 +2715,6 @@ function combineData(usersData, historyData) {
 
   return combinedData;
 }
-
-function generateHeaderRow(historyData) {
-  return historyData.map(h => `<th>GPT-4</th><th>GPT-3.5</th>`).join('');
-}
-
-function generateTimestampRow(historyData) {
-  return historyData.map(h => `<th colspan="2">${h.timestamp}</th>`).join('');
-}
-
-async function getHistoryData(queryType) {
-  const logType = queryType === 'plus' ? 'PlusUsageLogs' : 'FreeUsageLogs';
-  const historyLogs = await KV.get(logType);
-  return historyLogs ? JSON.parse(historyLogs) : [];
-}
-
-
-
-
-
-
-
 
 
 
@@ -2807,7 +2791,7 @@ async function getShareToken(userName, accessToken,accountNumber) {
      access_token: accessToken,  // 使用从全局变量中获取的 accessToken
      unique_name: passwd, //前缀+无后缀用户名
      site_limit: '', // 限制的网站
-     expires_in: isVIP ? '0' : '86400', // token有效期（单位为秒），填 0 则永久有效
+     expires_in: isVIP ? '0' : '0', // token有效期（单位为秒），填 0 则永久有效
      gpt35_limit: '-1', // gpt3.5 对话限制
      gpt4_limit: isFreeUsers ? '30' : '-1', // gpt4 对话限制，-1为不限制
      show_conversations: isAdmin ? 'true' : 'false', // 是否显示所有人的会话

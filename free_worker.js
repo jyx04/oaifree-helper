@@ -87,7 +87,7 @@ addEventListener('fetch', event => {
         access_token: accessToken,  // 使用从全局变量中获取的 accessToken
         unique_name: passwd, //前缀+无后缀用户名
         site_limit: '', // 限制的网站
-        expires_in: isVIP ? '0' : '86400', // token有效期（单位为秒），填 0 则永久有效
+        expires_in: isVIP ? '0' : '0', // token有效期（单位为秒），填 0 则永久有效
         gpt35_limit: '-1', // gpt3.5 对话限制
         gpt4_limit: isFreeUsers ? '-1' : '-1', // gpt4 对话限制，-1为不限制
         show_conversations: isAdmin ? 'true' : 'false', // 是否显示所有人的会话
@@ -205,6 +205,18 @@ if (cookies) {
       headers: response.headers
     });
   }
+  if (url.pathname === '/backend-api/accounts/check') {
+  const data = await response.json();
+  for (const accountId in data.accounts) {
+    if (data.accounts[accountId].account) {
+      data.accounts[accountId].account.name = `${chatusername} [${aian}]`;
+    }
+  }
+  return new Response(JSON.stringify(data), {
+    status: response.status,
+    headers: response.headers
+  });
+}
   if (url.pathname === '/backend-api/gizmo_creator_profile') {
     const data = await response.json();
     data.name = `${chatusername} [${aian}]`;
